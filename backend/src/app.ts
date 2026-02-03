@@ -6,6 +6,7 @@ import { health } from './routes/health'
 import { auth } from './routes/auth'
 import { eventTypesRouter } from './routes/event-types'
 import { sessionsRouter } from './routes/sessions'
+import { chatRouter } from './routes/chat'
 
 const app = new Hono()
 
@@ -25,6 +26,7 @@ app.route('/api/health', health)
 app.route('/api/auth', auth)
 app.route('/api/event-types', eventTypesRouter)
 app.route('/api/sessions', sessionsRouter)
+app.route('/api/sessions', chatRouter)
 
 // 404 handler
 app.notFound((c) => {

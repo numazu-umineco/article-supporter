@@ -1,41 +1,145 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import { useToast } from 'primevue/usetoast'
 import { useSessions } from '@/composables/useSessions'
+import { useChat } from '@/composables/useChat'
+import { useAutoSave } from '@/composables/useAutoSave'
 import ProgressSpinner from 'primevue/progressspinner'
-import AppHeader from '@/components/AppHeader.vue'
+import SessionHeader from '@/components/session-edit/SessionHeader.vue'
+import ChatPane from '@/components/session-edit/ChatPane.vue'
+import EditorPane from '@/components/session-edit/EditorPane.vue'
 import type { Session } from '@/types'
 
 const route = useRoute()
-const router = useRouter()
-const { getSession } = useSessions()
+const toast = useToast()
+const sessionId = route.params.id as string
+const { getSession, updateSession } = useSessions()
+const { messages, loading: loadingMessages, sending, fetchMessages, sendMessage } = useChat(sessionId)
 
 const session = ref<Session | null>(null)
-const loading = ref(true)
+const loadingSession = ref(true)
+
+// Editor fields
+const title = ref<string | null>(null)
+const slug = ref<string | null>(null)
+const articleContent = ref<string | null>(null)
+
+const isMerged = computed(() => session.value?.status === 'merged')
+
+// Auto-save
+const { saving, saved, markDirty } = useAutoSave(async () => {
+  if (!session.value) return
+  await updateSession(session.value.id, {
+    title: title.value,
+    slug: slug.value,
+    articleContent: articleContent.value,
+  })
+})
+
+// Watch editor fields for auto-save
+watch(title, () => { if (!loadingSession.value) markDirty() })
+watch(slug, () => { if (!loadingSession.value) markDirty() })
+watch(articleContent, () => { if (!loadingSession.value) markDirty() })
 
 onMounted(async () => {
   try {
-    const id = route.params.id as string
-    session.value = await getSession(id)
+    session.value = await getSession(sessionId)
+    title.value = session.value.title
+    slug.value = session.value.slug
+    articleContent.value = session.value.articleContent
+    await fetchMessages()
   } finally {
-    loading.value = false
+    loadingSession.value = false
+  }
+
+  // If no messages exist (new session), send initial prompt automatically
+  // This runs after loadingSession is false so the UI is already visible
+  if (messages.value.length === 0 && !isMerged.value) {
+    const eventTypeName = session.value!.eventType?.name ?? 'イベント'
+    const eventDate = session.value!.eventDate
+    const initialMessage = `${eventDate}に開催された「${eventTypeName}」の開催報告記事を作成してください。`
+
+    const result = await sendMessage(initialMessage, {
+      title: title.value,
+      slug: slug.value,
+      articleContent: articleContent.value,
+    })
+
+    if (result.article) {
+      if (result.article.title !== undefined) title.value = result.article.title
+      if (result.article.slug !== undefined) slug.value = result.article.slug
+      if (result.article.content !== undefined) articleContent.value = result.article.content
+      session.value = await getSession(sessionId)
+    }
   }
 })
+
+async function handleSendMessage(content: string) {
+  const result = await sendMessage(content, {
+    title: title.value,
+    slug: slug.value,
+    articleContent: articleContent.value,
+  })
+
+  // If article was extracted, update editor fields
+  if (result.article) {
+    if (result.article.title !== undefined) title.value = result.article.title
+    if (result.article.slug !== undefined) slug.value = result.article.slug
+    if (result.article.content !== undefined) articleContent.value = result.article.content
+    // Refresh session to get updated data
+    session.value = await getSession(sessionId)
+  }
+}
+
+function handlePublish() {
+  toast.add({
+    severity: 'info',
+    summary: '未実装',
+    detail: 'PR作成機能は Phase 7 で実装されます',
+    life: 3000,
+  })
+}
 </script>
 
 <template>
-  <div class="min-h-screen surface-ground">
-    <AppHeader :title="session?.title || '無題'" show-back />
+  <div class="flex flex-column" style="height: 100vh">
+    <div v-if="loadingSession" class="flex-1 flex align-items-center justify-content-center">
+      <ProgressSpinner />
+    </div>
 
-    <main class="grid grid-nogutter justify-content-center p-4">
-      <div v-if="loading" class="col-12 flex justify-content-center py-5">
-        <ProgressSpinner />
+    <template v-else-if="session">
+      <!-- Header -->
+      <SessionHeader
+        :session="session"
+        :saving="saving"
+        :saved="saved"
+        @publish="handlePublish"
+      />
+
+      <!-- 3-pane layout -->
+      <div class="flex flex-1 overflow-hidden">
+        <!-- Left pane: Chat -->
+        <div class="w-6 border-right-1 surface-border flex flex-column">
+          <ChatPane
+            :messages="messages"
+            :loading="loadingMessages"
+            :sending="sending"
+            :disabled="isMerged"
+            @send="handleSendMessage"
+          />
+        </div>
+
+        <!-- Right pane: Editor -->
+        <div class="w-6 flex flex-column">
+          <EditorPane
+            v-model:title="title"
+            v-model:slug="slug"
+            v-model:article-content="articleContent"
+            :disabled="isMerged || sending"
+          />
+        </div>
       </div>
-      <div v-else-if="session" class="col-12 lg:col-10">
-        <p class="text-600">
-          記事編集画面は Phase 5 で実装されます。
-        </p>
-      </div>
-    </main>
+    </template>
   </div>
 </template>

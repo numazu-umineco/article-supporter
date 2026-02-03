@@ -1,0 +1,106 @@
+<script setup lang="ts">
+import { ref, nextTick, watch } from 'vue'
+import Textarea from 'primevue/textarea'
+import Button from 'primevue/button'
+import ProgressSpinner from 'primevue/progressspinner'
+import ChatMessageItem from './ChatMessage.vue'
+import type { ChatMessage } from '@/types'
+
+const props = defineProps<{
+  messages: ChatMessage[]
+  loading: boolean
+  sending: boolean
+  disabled: boolean
+}>()
+
+const emit = defineEmits<{
+  send: [content: string]
+}>()
+
+const messageInput = ref('')
+const chatContainer = ref<HTMLElement | null>(null)
+
+function handleSend() {
+  const content = messageInput.value.trim()
+  if (!content || props.sending) return
+
+  emit('send', content)
+  messageInput.value = ''
+}
+
+function handleKeydown(e: KeyboardEvent) {
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+    e.preventDefault()
+    handleSend()
+  }
+}
+
+// Auto-scroll to bottom when messages change
+watch(
+  () => props.messages.length,
+  async () => {
+    await nextTick()
+    if (chatContainer.value) {
+      chatContainer.value.scrollTop = chatContainer.value.scrollHeight
+    }
+  }
+)
+</script>
+
+<template>
+  <div class="flex flex-column h-full">
+    <!-- Chat history -->
+    <div
+      ref="chatContainer"
+      class="flex-1 overflow-y-auto p-3"
+    >
+      <div v-if="loading" class="flex justify-content-center py-3">
+        <ProgressSpinner style="width: 2rem; height: 2rem" />
+      </div>
+      <template v-else>
+        <div v-if="messages.length === 0" class="text-center text-600 py-5">
+          <i class="pi pi-comments text-4xl mb-3 block" />
+          <p>メッセージを送信して記事作成を開始しましょう。</p>
+        </div>
+        <ChatMessageItem
+          v-for="msg in messages"
+          :key="msg.id"
+          :message="msg"
+        />
+        <div v-if="sending" class="flex justify-content-start mb-3">
+          <div class="surface-100 border-round-lg px-3 py-2">
+            <ProgressSpinner style="width: 1.5rem; height: 1.5rem" />
+          </div>
+        </div>
+      </template>
+    </div>
+
+    <!-- Input area -->
+    <div v-if="!disabled" class="p-3 border-top-1 surface-border">
+      <div class="flex gap-2">
+        <Textarea
+          v-model="messageInput"
+          placeholder="メッセージを入力... (Ctrl+Enter で送信)"
+          :rows="1"
+          auto-resize
+          class="flex-1"
+          @keydown="handleKeydown"
+        />
+        <Button
+          icon="pi pi-send"
+          :loading="sending"
+          :disabled="!messageInput.trim()"
+          @click="handleSend"
+          class="align-self-end"
+        />
+      </div>
+    </div>
+
+    <!-- Merged notice -->
+    <div v-else class="p-3 border-top-1 surface-border">
+      <p class="text-center text-600 m-0">
+        このセッションはマージ済みのため編集できません
+      </p>
+    </div>
+  </div>
+</template>
