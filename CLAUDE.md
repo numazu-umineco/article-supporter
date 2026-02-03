@@ -447,7 +447,7 @@ Markdown形式の記事本文
 ```
 # GitHub App
 GITHUB_APP_ID=
-GITHUB_APP_PRIVATE_KEY=
+GITHUB_APP_PRIVATE_KEY_PATH=  # 秘密鍵ファイルへのパス (例: ./github-app.private-key.pem)
 GITHUB_CLIENT_ID=
 GITHUB_CLIENT_SECRET=
 GITHUB_APP_INSTALLATION_ID=

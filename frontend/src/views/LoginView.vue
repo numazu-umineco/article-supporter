@@ -16,7 +16,7 @@ const authStore = useAuthStore()
         </div>
       </template>
       <template #content>
-        <p class="text-center text-600 mb-4">GitHubアカウントでログインしてください。</p>
+        <p class="text-center mb-4">GitHubアカウントでログインしてください。</p>
         <Button
           label="GitHubでログイン"
           icon="pi pi-github"
@@ -31,6 +31,6 @@ const authStore = useAuthStore()
 
 <style scoped>
 .login-container {
-  background: linear-gradient(135deg, var(--surface-ground) 0%, var(--surface-100) 100%);
+  background: linear-gradient(135deg, var(--p-surface-0) 0%, var(--p-surface-100) 100%);
 }
 </style>

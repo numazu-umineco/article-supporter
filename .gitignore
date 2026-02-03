@@ -10,6 +10,9 @@ build/
 .env.local
 .env.*.local
 
+# GitHub App private key
+*.pem
+
 # IDE
 .vscode/
 .idea/

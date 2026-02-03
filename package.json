@@ -2,7 +2,7 @@
   "name": "article-supporter",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev": "run-p dev:backend dev:frontend",
     "dev:frontend": "npm -w frontend run dev",
     "dev:backend": "npm -w backend run dev",
     "build": "npm -w frontend run build && npm -w backend run build",
@@ -11,7 +11,7 @@
     "lint": "npm -w frontend run lint && npm -w backend run lint",
     "typecheck": "npm -w frontend run typecheck && npm -w backend run typecheck",
     "db:generate": "npm -w backend run db:generate",
-    "db:migrate": "npm -w backend run db:migrate",
+    "db:migrate": "npm -w backend run db:generate && npm -w backend run db:migrate",
     "db:studio": "npm -w backend run db:studio"
   },
   "workspaces": [
@@ -19,7 +19,7 @@
     "backend"
   ],
   "devDependencies": {
-    "concurrently": "^9.1.2"
+    "npm-run-all2": "^8.0.4"
   },
   "engines": {
     "node": ">=20.0.0"

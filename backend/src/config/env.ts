@@ -4,13 +4,14 @@ import 'dotenv/config'
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.coerce.number().default(3000),
+  FRONTEND_URL: z.string().url().default('http://localhost:5173'),
 
   // Database
   DATABASE_URL: z.string().url(),
 
   // GitHub App
   GITHUB_APP_ID: z.string(),
-  GITHUB_APP_PRIVATE_KEY: z.string(),
+  GITHUB_APP_PRIVATE_KEY_PATH: z.string(),
   GITHUB_CLIENT_ID: z.string(),
   GITHUB_CLIENT_SECRET: z.string(),
   GITHUB_APP_INSTALLATION_ID: z.string(),
@@ -37,6 +38,7 @@ const envSchema = z.object({
 const partialEnvSchema = envSchema.partial().extend({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.coerce.number().default(3000),
+  FRONTEND_URL: z.string().url().default('http://localhost:5173'),
   DATABASE_URL: z.string().url().optional(),
 })
 

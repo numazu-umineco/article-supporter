@@ -6,9 +6,17 @@ const port = env.PORT
 
 console.log(`Starting server on port ${port}...`)
 
-serve({
+const server = serve({
   fetch: app.fetch,
   port,
 })
 
 console.log(`Server is running on http://localhost:${port}`)
+
+const shutdown = () => {
+  server.close()
+  process.exit(0)
+}
+
+process.on('SIGINT', shutdown)
+process.on('SIGTERM', shutdown)

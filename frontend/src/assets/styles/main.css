@@ -5,7 +5,7 @@
 
 html,
 body {
-  font-family: var(--font-family);
+  font-family: var(--p-font-family);
   margin: 0;
   padding: 0;
   height: 100%;
@@ -23,14 +23,14 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--surface-100);
+  background: var(--p-surface-100);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--surface-400);
+  background: var(--p-surface-400);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--surface-500);
+  background: var(--p-surface-500);
 }
