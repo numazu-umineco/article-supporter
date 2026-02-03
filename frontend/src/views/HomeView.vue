@@ -36,6 +36,13 @@ async function handleLogout() {
               />
               <span class="font-medium">{{ authStore.user.githubLogin }}</span>
             </div>
+            <Button
+              icon="pi pi-cog"
+              label="イベント種類管理"
+              severity="secondary"
+              text
+              @click="router.push('/event-types')"
+            />
             <Button icon="pi pi-sign-out" variant="outlined" severity="secondary" @click="handleLogout" />
           </div>
         </div>

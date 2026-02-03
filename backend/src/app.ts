@@ -4,6 +4,7 @@ import { errorHandler } from './middlewares/error-handler'
 import { logger } from './middlewares/logger'
 import { health } from './routes/health'
 import { auth } from './routes/auth'
+import { eventTypesRouter } from './routes/event-types'
 
 const app = new Hono()
 
@@ -21,6 +22,7 @@ app.use(
 // Routes
 app.route('/api/health', health)
 app.route('/api/auth', auth)
+app.route('/api/event-types', eventTypesRouter)
 
 // 404 handler
 app.notFound((c) => {
