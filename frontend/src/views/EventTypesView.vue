@@ -9,7 +9,7 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Button from 'primevue/button'
 import Tag from 'primevue/tag'
-import ConfirmDialog from 'primevue/confirmdialog'
+import AppHeader from '@/components/AppHeader.vue'
 import EventTypeForm from '@/components/event-types/EventTypeForm.vue'
 import type { EventType } from '@/types'
 
@@ -91,24 +91,11 @@ async function handleLogout() {
 
 <template>
   <div class="min-h-screen surface-ground">
-    <!-- Header -->
-    <header class="surface-card shadow-1 px-4 py-3">
-      <div class="grid grid-nogutter justify-content-center">
-        <div class="col-12 lg:col-10 flex align-items-center justify-content-between">
-          <div class="flex align-items-center gap-3">
-            <Button
-              icon="pi pi-arrow-left"
-              severity="secondary"
-              text
-              rounded
-              @click="router.push('/')"
-            />
-            <h1 class="text-xl font-bold m-0">イベント種類管理</h1>
-          </div>
-          <Button icon="pi pi-sign-out" variant="outlined" severity="secondary" @click="handleLogout" />
-        </div>
-      </div>
-    </header>
+    <AppHeader title="イベント種類管理" show-back>
+      <template #actions>
+        <Button icon="pi pi-sign-out" variant="outlined" severity="secondary" @click="handleLogout" />
+      </template>
+    </AppHeader>
 
     <!-- Main content -->
     <main class="grid grid-nogutter justify-content-center p-4">
@@ -169,6 +156,5 @@ async function handleLogout() {
       @update:visible="formVisible = $event"
       @save="handleSave"
     />
-    <ConfirmDialog />
   </div>
 </template>

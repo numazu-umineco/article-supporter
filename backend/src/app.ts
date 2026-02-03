@@ -5,6 +5,7 @@ import { logger } from './middlewares/logger'
 import { health } from './routes/health'
 import { auth } from './routes/auth'
 import { eventTypesRouter } from './routes/event-types'
+import { sessionsRouter } from './routes/sessions'
 
 const app = new Hono()
 
@@ -23,6 +24,7 @@ app.use(
 app.route('/api/health', health)
 app.route('/api/auth', auth)
 app.route('/api/event-types', eventTypesRouter)
+app.route('/api/sessions', sessionsRouter)
 
 // 404 handler
 app.notFound((c) => {

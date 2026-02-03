@@ -22,6 +22,12 @@ const router = createRouter({
       component: () => import('@/views/EventTypesView.vue'),
       meta: { requiresAuth: true },
     },
+{
+      path: '/sessions/:id',
+      name: 'session-edit',
+      component: () => import('@/views/SessionEditView.vue'),
+      meta: { requiresAuth: true },
+    },
   ],
 })
 
