@@ -1,0 +1,36 @@
+/* Global styles */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  font-family: var(--font-family);
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+/* Utility classes */
+.cursor-pointer {
+  cursor: pointer;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--surface-100);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--surface-400);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--surface-500);
+}
