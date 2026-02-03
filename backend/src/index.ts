@@ -14,9 +14,11 @@ const server = serve({
 console.log(`Server is running on http://localhost:${port}`)
 
 const shutdown = () => {
+  console.log('Shutting down server...')
   server.close()
   process.exit(0)
 }
 
 process.on('SIGINT', shutdown)
 process.on('SIGTERM', shutdown)
+process.on('SIGUSR2', shutdown)
