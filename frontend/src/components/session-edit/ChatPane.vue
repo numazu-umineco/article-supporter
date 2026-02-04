@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, nextTick, watch } from 'vue'
+import Avatar from 'primevue/avatar'
 import Textarea from 'primevue/textarea'
 import Button from 'primevue/button'
 import ProgressSpinner from 'primevue/progressspinner'
@@ -68,8 +69,15 @@ watch(
           :message="msg"
         />
         <div v-if="sending" class="flex justify-content-start mb-3">
-          <div class="surface-100 border-round-lg px-3 py-2">
-            <ProgressSpinner style="width: 1.5rem; height: 1.5rem" />
+          <Avatar
+            label="S"
+            class="mr-2" 
+            shape="circle"
+          />
+          <div class="surface-100 border-round-lg px-3 py-2 typing-bubble">
+            <span class="typing-dot" />
+            <span class="typing-dot" />
+            <span class="typing-dot" />
           </div>
         </div>
       </template>
@@ -104,3 +112,47 @@ watch(
     </div>
   </div>
 </template>
+
+<style scoped>
+.typing-bubble {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.typing-bubble {
+  min-height: calc(1lh + 0.5rem * 2);
+}
+
+.typing-dot {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background-color: var(--p-text-muted-color);
+  animation: typing-bounce 1.4s infinite ease-in-out both;
+}
+
+.typing-dot:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.typing-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typing-bounce {
+  0%, 80%, 100% {
+    transform: scale(0.6);
+    opacity: 0.4;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+</style>

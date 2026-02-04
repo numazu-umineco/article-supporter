@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { useSessions } from '@/composables/useSessions'
@@ -27,6 +27,8 @@ const articleContent = ref<string | null>(null)
 
 const isMerged = computed(() => session.value?.status === 'merged')
 
+let pollTimer: ReturnType<typeof setInterval> | null = null
+
 // Auto-save
 const { saving, saved, markDirty } = useAutoSave(async () => {
   if (!session.value) return
@@ -49,29 +51,37 @@ onMounted(async () => {
     slug.value = session.value.slug
     articleContent.value = session.value.articleContent
     await fetchMessages()
+
+    // If last message is from user (assistant reply pending), poll for response
+    const lastMsg = messages.value[messages.value.length - 1]
+    if (lastMsg && lastMsg.role === 'user') {
+      sending.value = true
+      pollTimer = setInterval(async () => {
+        await fetchMessages()
+        const latest = messages.value[messages.value.length - 1]
+        if (latest && latest.role === 'assistant') {
+          sending.value = false
+          if (pollTimer) {
+            clearInterval(pollTimer)
+            pollTimer = null
+          }
+          // Update editor fields if article was extracted
+          session.value = await getSession(sessionId)
+          if (session.value.title) title.value = session.value.title
+          if (session.value.slug) slug.value = session.value.slug
+          if (session.value.articleContent) articleContent.value = session.value.articleContent
+        }
+      }, 2000)
+    }
   } finally {
     loadingSession.value = false
   }
+})
 
-  // If no messages exist (new session), send initial prompt automatically
-  // This runs after loadingSession is false so the UI is already visible
-  if (messages.value.length === 0 && !isMerged.value) {
-    const eventTypeName = session.value!.eventType?.name ?? 'イベント'
-    const eventDate = session.value!.eventDate
-    const initialMessage = `${eventDate}に開催された「${eventTypeName}」の開催報告記事を作成してください。`
-
-    const result = await sendMessage(initialMessage, {
-      title: title.value,
-      slug: slug.value,
-      articleContent: articleContent.value,
-    })
-
-    if (result.article) {
-      if (result.article.title !== undefined) title.value = result.article.title
-      if (result.article.slug !== undefined) slug.value = result.article.slug
-      if (result.article.content !== undefined) articleContent.value = result.article.content
-      session.value = await getSession(sessionId)
-    }
+onUnmounted(() => {
+  if (pollTimer) {
+    clearInterval(pollTimer)
+    pollTimer = null
   }
 })
 

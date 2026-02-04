@@ -2,7 +2,6 @@
 import { computed, ref, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useSessions } from '@/composables/useSessions'
-import { useEventTypes } from '@/composables/useEventTypes'
 import { useRouter } from 'vue-router'
 import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
@@ -10,24 +9,18 @@ import Button from 'primevue/button'
 import Avatar from 'primevue/avatar'
 import Card from 'primevue/card'
 import ProgressSpinner from 'primevue/progressspinner'
-import Dialog from 'primevue/dialog'
-import DatePicker from 'primevue/datepicker'
-import Select from 'primevue/select'
 import AppHeader from '@/components/AppHeader.vue'
 import SessionCard from '@/components/sessions/SessionCard.vue'
+import NewSessionDialog from '@/components/sessions/NewSessionDialog.vue'
 import type { Session } from '@/types'
 
 const authStore = useAuthStore()
 const router = useRouter()
 const confirm = useConfirm()
 const toast = useToast()
-const { sessions, loading, fetchSessions, deleteSession, createSession } = useSessions()
-const { eventTypes, loading: loadingEventTypes, fetchEventTypes } = useEventTypes()
+const { sessions, loading, fetchSessions, deleteSession } = useSessions()
 
 const showNewSessionDialog = ref(false)
-const eventDate = ref<Date | null>(null)
-const selectedEventTypeId = ref<string | null>(null)
-const creating = ref(false)
 
 const avatarImage = computed(() => authStore.user?.githubAvatarUrl ?? undefined)
 const avatarLabel = computed(() =>
@@ -60,42 +53,6 @@ function handleDeleteSession(session: Session) {
       })
     },
   })
-}
-
-function openNewSessionDialog() {
-  eventDate.value = null
-  selectedEventTypeId.value = null
-  fetchEventTypes(true)
-  showNewSessionDialog.value = true
-}
-
-function formatDateToString(date: Date): string {
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, '0')
-  const d = String(date.getDate()).padStart(2, '0')
-  return `${y}-${m}-${d}`
-}
-
-async function handleCreateSession() {
-  if (!eventDate.value || !selectedEventTypeId.value) return
-
-  creating.value = true
-  try {
-    const session = await createSession({
-      eventTypeId: selectedEventTypeId.value,
-      eventDate: formatDateToString(eventDate.value),
-    })
-    showNewSessionDialog.value = false
-    toast.add({
-      severity: 'success',
-      summary: '作成完了',
-      detail: 'セッションを作成しました',
-      life: 3000,
-    })
-    router.push(`/sessions/${session.id}`)
-  } finally {
-    creating.value = false
-  }
 }
 
 async function handleLogout() {
@@ -132,7 +89,7 @@ async function handleLogout() {
       <div class="col-12 lg:col-10">
         <div class="flex justify-content-between align-items-center mb-4">
           <h2 class="text-2xl font-bold m-0">セッション一覧</h2>
-          <Button label="新規セッション" icon="pi pi-plus" @click="openNewSessionDialog" />
+          <Button label="新規セッション" icon="pi pi-plus" @click="showNewSessionDialog = true" />
         </div>
 
         <div v-if="loading" class="flex justify-content-center py-5">
@@ -162,54 +119,6 @@ async function handleLogout() {
       </div>
     </main>
 
-    <!-- New Session Dialog -->
-    <Dialog
-      v-model:visible="showNewSessionDialog"
-      header="新規セッション作成"
-      :style="{ width: '28rem' }"
-      modal
-    >
-      <div class="flex flex-column gap-4">
-        <div class="flex flex-column gap-2">
-          <label for="event-date" class="font-medium">イベント開催日 *</label>
-          <DatePicker
-            id="event-date"
-            v-model="eventDate"
-            date-format="yy-mm-dd"
-            placeholder="日付を選択"
-            show-icon
-          />
-        </div>
-
-        <div class="flex flex-column gap-2">
-          <label for="event-type" class="font-medium">イベント種類 *</label>
-          <Select
-            id="event-type"
-            v-model="selectedEventTypeId"
-            :options="eventTypes"
-            option-label="name"
-            option-value="id"
-            placeholder="イベント種類を選択"
-            :loading="loadingEventTypes"
-          />
-        </div>
-      </div>
-
-      <template #footer>
-        <Button
-          label="キャンセル"
-          severity="secondary"
-          text
-          @click="showNewSessionDialog = false"
-        />
-        <Button
-          label="作成"
-          icon="pi pi-plus"
-          :loading="creating"
-          :disabled="!eventDate || !selectedEventTypeId"
-          @click="handleCreateSession"
-        />
-      </template>
-    </Dialog>
+    <NewSessionDialog v-model:visible="showNewSessionDialog" />
   </div>
 </template>

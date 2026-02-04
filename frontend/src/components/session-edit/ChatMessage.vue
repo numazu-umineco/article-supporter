@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { stripArticleFromDisplay } from '@/composables/useChat'
+import Avatar from 'primevue/avatar'
 import type { ChatMessage } from '@/types'
 
 const props = defineProps<{
@@ -20,12 +21,19 @@ const displayContent = computed(() => {
 
 <template>
   <div
-    class="flex mb-3"
+    class="flex mb-3 align-items-start"
     :class="isUser ? 'justify-content-end' : 'justify-content-start'"
   >
+    <Avatar 
+      v-if="!isUser"
+      label="S"
+      class="mr-2" 
+      shape="circle"
+    />
     <div
-      class="border-round-lg px-3 py-2 max-w-30rem white-space-pre-wrap"
-      :class="isUser ? 'bg-primary' : 'surface-100 text-color'"
+      class="border-round-lg px-3 py-2 max-w-30rem"
+      :class="isUser ? 'surface-200' : 'surface-100 text-color'"
+      style="white-space: pre-wrap"
     >
       {{ displayContent }}
     </div>
