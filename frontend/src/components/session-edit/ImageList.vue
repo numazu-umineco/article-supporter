@@ -12,9 +12,10 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   upload: [file: File]
-  updateFilename: [imageId: string, customFilename: string]
+  updateFilename: [imageId: string, oldFilename: string, newFilename: string]
   setEyecatch: [imageId: string]
   delete: [imageId: string]
+  insertImage: [filename: string]
 }>()
 
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -112,9 +113,10 @@ function handleEmptyClick() {
         :key="image.id"
         :image="image"
         :disabled="disabled"
-        @update-filename="(id, name) => emit('updateFilename', id, name)"
+        @update-filename="(id, oldName, newName) => emit('updateFilename', id, oldName, newName)"
         @set-eyecatch="(id) => emit('setEyecatch', id)"
         @delete="(id) => emit('delete', id)"
+        @insert-image="(filename) => emit('insertImage', filename)"
       />
     </div>
 

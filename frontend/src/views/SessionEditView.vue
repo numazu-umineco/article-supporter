@@ -117,8 +117,8 @@ async function handleUploadImage(file: File) {
   })
 }
 
-async function handleUpdateImageFilename(imageId: string, customFilename: string) {
-  await updateImage(imageId, { customFilename })
+async function handleUpdateImageFilename(imageId: string, _oldFilename: string, newFilename: string) {
+  await updateImage(imageId, { customFilename: newFilename })
 }
 
 async function handleSetEyecatch(imageId: string) {

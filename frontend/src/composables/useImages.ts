@@ -1,5 +1,6 @@
 import { ref } from 'vue'
 import { useApi } from './useApi'
+import { resizeImage } from '@/utils/resizeImage'
 import type { SessionImage } from '@/types'
 
 export function useImages(sessionId: string) {
@@ -15,8 +16,9 @@ export function useImages(sessionId: string) {
   async function uploadImage(file: File): Promise<SessionImage> {
     uploading.value = true
     try {
+      const resizedFile = await resizeImage(file)
       const formData = new FormData()
-      formData.append('file', file)
+      formData.append('file', resizedFile)
       const image = await upload<SessionImage>(
         `/api/sessions/${sessionId}/images`,
         formData

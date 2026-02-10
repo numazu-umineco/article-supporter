@@ -18,12 +18,28 @@ defineProps<{
 
 defineEmits<{
   uploadImage: [file: File]
-  updateImageFilename: [imageId: string, customFilename: string]
+  updateImageFilename: [imageId: string, oldFilename: string, newFilename: string]
   setEyecatch: [imageId: string]
   deleteImage: [imageId: string]
 }>()
 
 const imagesPanelOpen = ref(true)
+
+function handleInsertImage(filename: string) {
+  const tag = `![](${'./' + filename})`
+  const current = articleContent.value ?? ''
+  // Append with a newline if content exists
+  articleContent.value = current ? current + '\n' + tag : tag
+}
+
+function handleUpdateFilename(_imageId: string, oldFilename: string, newFilename: string) {
+  // Replace references in article content
+  if (articleContent.value) {
+    const oldRef = './' + oldFilename
+    const newRef = './' + newFilename
+    articleContent.value = articleContent.value.replaceAll(oldRef, newRef)
+  }
+}
 </script>
 
 <template>
@@ -88,9 +104,10 @@ const imagesPanelOpen = ref(true)
           :uploading="uploading"
           :disabled="disabled"
           @upload="$emit('uploadImage', $event)"
-          @update-filename="(id, name) => $emit('updateImageFilename', id, name)"
+          @update-filename="(id, oldName, newName) => { handleUpdateFilename(id, oldName, newName); $emit('updateImageFilename', id, oldName, newName) }"
           @set-eyecatch="$emit('setEyecatch', $event)"
           @delete="$emit('deleteImage', $event)"
+          @insert-image="handleInsertImage"
         />
       </div>
     </div>
