@@ -7,6 +7,7 @@ import { auth } from './routes/auth'
 import { eventTypesRouter } from './routes/event-types'
 import { sessionsRouter } from './routes/sessions'
 import { chatRouter } from './routes/chat'
+import { imagesRouter } from './routes/images'
 
 const app = new Hono()
 
@@ -27,6 +28,7 @@ app.route('/api/auth', auth)
 app.route('/api/event-types', eventTypesRouter)
 app.route('/api/sessions', sessionsRouter)
 app.route('/api/sessions', chatRouter)
+app.route('/api/sessions', imagesRouter)
 
 // 404 handler
 app.notFound((c) => {

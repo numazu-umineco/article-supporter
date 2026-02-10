@@ -36,6 +36,7 @@ export interface Session {
   prUrl: string | null
   prNumber: number | null
   branchName: string | null
+  images?: SessionImage[]
   createdAt: string
   updatedAt: string
 }

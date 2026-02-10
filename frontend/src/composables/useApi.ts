@@ -53,6 +53,42 @@ export function useApi() {
     return response.json()
   }
 
+  async function upload<T>(url: string, formData: FormData): Promise<T> {
+    const response = await fetch(url, {
+      method: 'POST',
+      credentials: 'include',
+      body: formData,
+    })
+
+    if (!response.ok) {
+      let errorData: { error?: { code?: string; message?: string } } = {}
+      try {
+        errorData = await response.json()
+      } catch {
+        // Response is not JSON
+      }
+
+      const errorMessage = errorData.error?.message || 'An error occurred'
+      const errorCode = errorData.error?.code || 'UNKNOWN_ERROR'
+
+      if (response.status === 401) {
+        window.location.href = '/login'
+        throw new ApiError('Unauthorized', 'UNAUTHORIZED', 401)
+      }
+
+      toast.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: errorMessage,
+        life: 5000,
+      })
+
+      throw new ApiError(errorMessage, errorCode, response.status)
+    }
+
+    return response.json()
+  }
+
   return {
     get: <T>(url: string) => request<T>(url),
     post: <T>(url: string, body?: unknown) =>
@@ -69,5 +105,6 @@ export function useApi() {
       request<T>(url, {
         method: 'DELETE',
       }),
+    upload,
   }
 }

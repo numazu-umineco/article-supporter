@@ -5,6 +5,7 @@ import { useToast } from 'primevue/usetoast'
 import { useSessions } from '@/composables/useSessions'
 import { useChat } from '@/composables/useChat'
 import { useAutoSave } from '@/composables/useAutoSave'
+import { useImages } from '@/composables/useImages'
 import ProgressSpinner from 'primevue/progressspinner'
 import SessionHeader from '@/components/session-edit/SessionHeader.vue'
 import ChatPane from '@/components/session-edit/ChatPane.vue'
@@ -16,6 +17,7 @@ const toast = useToast()
 const sessionId = route.params.id as string
 const { getSession, updateSession } = useSessions()
 const { messages, loading: loadingMessages, sending, fetchMessages, sendMessage } = useChat(sessionId)
+const { images, uploading, setImages, uploadImage, updateImage, deleteImage } = useImages(sessionId)
 
 const session = ref<Session | null>(null)
 const loadingSession = ref(true)
@@ -50,6 +52,9 @@ onMounted(async () => {
     title.value = session.value.title
     slug.value = session.value.slug
     articleContent.value = session.value.articleContent
+    if (session.value.images) {
+      setImages(session.value.images)
+    }
     await fetchMessages()
 
     // If last message is from user (assistant reply pending), poll for response
@@ -102,6 +107,35 @@ async function handleSendMessage(content: string) {
   }
 }
 
+async function handleUploadImage(file: File) {
+  await uploadImage(file)
+  toast.add({
+    severity: 'success',
+    summary: 'アップロード完了',
+    detail: `${file.name} をアップロードしました`,
+    life: 3000,
+  })
+}
+
+async function handleUpdateImageFilename(imageId: string, customFilename: string) {
+  await updateImage(imageId, { customFilename })
+}
+
+async function handleSetEyecatch(imageId: string) {
+  await updateImage(imageId, { isEyecatch: true })
+  // Refresh session to get updated eyecatchImageId
+  session.value = await getSession(sessionId)
+}
+
+async function handleDeleteImage(imageId: string) {
+  await deleteImage(imageId)
+  // Refresh session in case eyecatch was cleared
+  session.value = await getSession(sessionId)
+  if (session.value.images) {
+    setImages(session.value.images)
+  }
+}
+
 function handlePublish() {
   toast.add({
     severity: 'info',
@@ -146,7 +180,13 @@ function handlePublish() {
             v-model:title="title"
             v-model:slug="slug"
             v-model:article-content="articleContent"
+            :images="images"
+            :uploading="uploading"
             :disabled="isMerged || sending"
+            @upload-image="handleUploadImage"
+            @update-image-filename="handleUpdateImageFilename"
+            @set-eyecatch="handleSetEyecatch"
+            @delete-image="handleDeleteImage"
           />
         </div>
       </div>
