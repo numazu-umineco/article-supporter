@@ -6,6 +6,7 @@ import { useSessions } from '@/composables/useSessions'
 import { useChat } from '@/composables/useChat'
 import { useAutoSave } from '@/composables/useAutoSave'
 import { useImages } from '@/composables/useImages'
+import { useApi } from '@/composables/useApi'
 import ProgressSpinner from 'primevue/progressspinner'
 import SessionHeader from '@/components/session-edit/SessionHeader.vue'
 import ChatPane from '@/components/session-edit/ChatPane.vue'
@@ -18,6 +19,7 @@ const sessionId = route.params.id as string
 const { getSession, updateSession, publishSession } = useSessions()
 const { messages, loading: loadingMessages, sending, fetchMessages, sendMessage } = useChat(sessionId)
 const { images, uploading, setImages, uploadImage, updateImage, deleteImage } = useImages(sessionId)
+const { get: apiGet } = useApi()
 
 const session = ref<Session | null>(null)
 const loadingSession = ref(true)
@@ -29,6 +31,7 @@ const articleContent = ref<string | null>(null)
 
 const isMerged = computed(() => session.value?.status === 'merged')
 const publishing = ref(false)
+const targetSiteBaseUrl = ref<string | undefined>()
 let pollTimer: ReturnType<typeof setInterval> | null = null
 
 // Auto-save
@@ -80,6 +83,14 @@ onMounted(async () => {
     }
   } finally {
     loadingSession.value = false
+  }
+
+  // Fetch config (non-critical, ignore errors)
+  try {
+    const config = await apiGet<{ targetSiteBaseUrl: string | null }>('/api/config')
+    targetSiteBaseUrl.value = config.targetSiteBaseUrl ?? undefined
+  } catch {
+    // ignore
   }
 })
 
@@ -210,6 +221,7 @@ async function handlePublish() {
             :uploading="uploading"
             :disabled="isMerged || sending"
             :event-date="session.eventDate"
+            :base-url="targetSiteBaseUrl"
             @upload-image="handleUploadImage"
             @update-image-filename="handleUpdateImageFilename"
             @set-eyecatch="handleSetEyecatch"

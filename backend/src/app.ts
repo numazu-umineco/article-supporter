@@ -9,6 +9,7 @@ import { sessionsRouter } from './routes/sessions'
 import { chatRouter } from './routes/chat'
 import { imagesRouter } from './routes/images'
 import { publishRouter } from './routes/publish'
+import { configRouter } from './routes/config'
 
 const app = new Hono()
 
@@ -31,6 +32,7 @@ app.route('/api/sessions', sessionsRouter)
 app.route('/api/sessions', chatRouter)
 app.route('/api/sessions', imagesRouter)
 app.route('/api/sessions', publishRouter)
+app.route('/api/config', configRouter)
 
 // 404 handler
 app.notFound((c) => {

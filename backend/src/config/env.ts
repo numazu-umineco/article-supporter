@@ -32,6 +32,9 @@ const envSchema = z.object({
   S3_BUCKET: z.string(),
   S3_ACCESS_KEY_ID: z.string(),
   S3_SECRET_ACCESS_KEY: z.string(),
+
+  // Target site
+  TARGET_SITE_BASE_URL: z.string().url().optional(),
 })
 
 // For development, allow partial config during initial setup
