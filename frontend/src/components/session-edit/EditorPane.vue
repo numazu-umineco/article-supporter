@@ -169,7 +169,7 @@ function handleUpdateFilename(_imageId: string, oldFilename: string, newFilename
   display: flex;
   flex-direction: column;
   height: 100%;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 .editor-area {
@@ -179,6 +179,7 @@ function handleUpdateFilename(_imageId: string, oldFilename: string, newFilename
   min-height: 0;
   padding: 0.75rem;
   gap: 0.75rem;
+  overflow-y: auto;
 }
 
 .textarea-wrapper {
