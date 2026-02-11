@@ -20,14 +20,15 @@ export function useChat(sessionId: string) {
   const loading = ref(false)
   const sending = ref(false)
 
-  async function fetchMessages() {
-    loading.value = true
+  async function fetchMessages(options?: { silent?: boolean }) {
+    const silent = options?.silent ?? false
+    if (!silent) loading.value = true
     try {
       messages.value = await api.get<ChatMessage[]>(
         `/api/sessions/${sessionId}/messages`
       )
     } finally {
-      loading.value = false
+      if (!silent) loading.value = false
     }
   }
 
@@ -58,7 +59,7 @@ export function useChat(sessionId: string) {
       )
 
       // Refresh messages to get actual saved messages from DB
-      await fetchMessages()
+      await fetchMessages({ silent: true })
 
       return result
     } finally {

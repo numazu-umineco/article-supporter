@@ -62,7 +62,7 @@ onMounted(async () => {
     if (lastMsg && lastMsg.role === 'user') {
       sending.value = true
       pollTimer = setInterval(async () => {
-        await fetchMessages()
+        await fetchMessages({ silent: true })
         const latest = messages.value[messages.value.length - 1]
         if (latest && latest.role === 'assistant') {
           sending.value = false
