@@ -15,7 +15,7 @@ import type { Session } from '@/types'
 const route = useRoute()
 const toast = useToast()
 const sessionId = route.params.id as string
-const { getSession, updateSession } = useSessions()
+const { getSession, updateSession, publishSession } = useSessions()
 const { messages, loading: loadingMessages, sending, fetchMessages, sendMessage } = useChat(sessionId)
 const { images, uploading, setImages, uploadImage, updateImage, deleteImage } = useImages(sessionId)
 
@@ -28,11 +28,12 @@ const slug = ref<string | null>(null)
 const articleContent = ref<string | null>(null)
 
 const isMerged = computed(() => session.value?.status === 'merged')
+const publishing = ref(false)
 
 let pollTimer: ReturnType<typeof setInterval> | null = null
 
 // Auto-save
-const { saving, saved, markDirty } = useAutoSave(async () => {
+const { saving, saved, markDirty, save: flushSave } = useAutoSave(async () => {
   if (!session.value) return
   await updateSession(session.value.id, {
     title: title.value,
@@ -136,13 +137,38 @@ async function handleDeleteImage(imageId: string) {
   }
 }
 
-function handlePublish() {
-  toast.add({
-    severity: 'info',
-    summary: '未実装',
-    detail: 'PR作成機能は Phase 7 で実装されます',
-    life: 3000,
-  })
+async function handlePublish() {
+  if (!title.value?.trim()) {
+    toast.add({ severity: 'warn', summary: 'バリデーションエラー', detail: 'タイトルを入力してください', life: 3000 })
+    return
+  }
+  if (!slug.value?.trim()) {
+    toast.add({ severity: 'warn', summary: 'バリデーションエラー', detail: 'slugを入力してください', life: 3000 })
+    return
+  }
+  if (!articleContent.value?.trim()) {
+    toast.add({ severity: 'warn', summary: 'バリデーションエラー', detail: '記事本文を入力してください', life: 3000 })
+    return
+  }
+
+  publishing.value = true
+  try {
+    // Flush any pending auto-save first
+    await flushSave()
+
+    const updated = await publishSession(sessionId)
+    session.value = updated
+
+    const isUpdate = updated.status === 'pr_created' && session.value?.prUrl
+    toast.add({
+      severity: 'success',
+      summary: isUpdate ? 'PR更新完了' : 'PR作成完了',
+      detail: isUpdate ? 'PRを更新しました' : `PR #${updated.prNumber} を作成しました`,
+      life: 5000,
+    })
+  } finally {
+    publishing.value = false
+  }
 }
 </script>
 
@@ -158,6 +184,7 @@ function handlePublish() {
         :session="session"
         :saving="saving"
         :saved="saved"
+        :publishing="publishing"
         @publish="handlePublish"
       />
 

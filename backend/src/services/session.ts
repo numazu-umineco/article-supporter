@@ -92,6 +92,29 @@ export async function updateSession(
   return updated
 }
 
+export async function updateSessionPublishStatus(
+  id: string,
+  data: {
+    status: string
+    prUrl: string
+    prNumber: number
+    branchName: string
+  }
+) {
+  const db = getDb()
+
+  const [updated] = await db
+    .update(sessions)
+    .set({
+      ...data,
+      updatedAt: new Date(),
+    })
+    .where(eq(sessions.id, id))
+    .returning()
+
+  return updated
+}
+
 export async function deleteSession(id: string, userId: string) {
   const db = getDb()
 

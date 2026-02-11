@@ -8,6 +8,7 @@ defineProps<{
   session: Session
   saving: boolean
   saved: boolean
+  publishing: boolean
 }>()
 
 const emit = defineEmits<{
@@ -61,11 +62,31 @@ const router = useRouter()
           <Button
             label="PR作成"
             icon="pi pi-send"
+            :loading="publishing"
+            :disabled="publishing"
             @click="emit('publish')"
           />
         </template>
-        <template v-else-if="session.prUrl">
-          <a :href="session.prUrl" target="_blank" class="no-underline">
+        <template v-else-if="session.status === 'pr_created'">
+          <a v-if="session.prUrl" :href="session.prUrl" target="_blank" class="no-underline">
+            <Button
+              :label="`PR #${session.prNumber}`"
+              icon="pi pi-external-link"
+              severity="info"
+              outlined
+            />
+          </a>
+          <Button
+            label="PRを更新"
+            icon="pi pi-refresh"
+            severity="secondary"
+            :loading="publishing"
+            :disabled="publishing"
+            @click="emit('publish')"
+          />
+        </template>
+        <template v-else-if="session.status === 'merged'">
+          <a v-if="session.prUrl" :href="session.prUrl" target="_blank" class="no-underline">
             <Button
               :label="`PR #${session.prNumber}`"
               icon="pi pi-external-link"
@@ -74,7 +95,6 @@ const router = useRouter()
             />
           </a>
           <Tag
-            v-if="session.status === 'merged'"
             value="マージ済み"
             severity="success"
           />

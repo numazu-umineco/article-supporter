@@ -36,6 +36,10 @@ export function useSessions() {
     return api.patch<Session>(`/api/sessions/${id}`, data)
   }
 
+  async function publishSession(id: string) {
+    return api.post<Session>(`/api/sessions/${id}/publish`)
+  }
+
   async function deleteSession(id: string) {
     await api.delete(`/api/sessions/${id}`)
     await fetchSessions()
@@ -48,6 +52,7 @@ export function useSessions() {
     getSession,
     createSession,
     updateSession,
+    publishSession,
     deleteSession,
   }
 }
