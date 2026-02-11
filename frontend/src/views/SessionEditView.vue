@@ -209,6 +209,7 @@ async function handlePublish() {
             :images="images"
             :uploading="uploading"
             :disabled="isMerged || sending"
+            :event-date="session.eventDate"
             @upload-image="handleUploadImage"
             @update-image-filename="handleUpdateImageFilename"
             @set-eyecatch="handleSetEyecatch"

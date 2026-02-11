@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, nextTick } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 import InputText from 'primevue/inputtext'
 import Textarea from 'primevue/textarea'
 import Button from 'primevue/button'
@@ -23,11 +23,20 @@ function handleContentBlur() {
   }
 }
 
-defineProps<{
+const props = defineProps<{
   images: SessionImage[]
   uploading: boolean
   disabled: boolean
+  eventDate: string
 }>()
+
+const slugPrefix = computed(() => {
+  const d = new Date(props.eventDate)
+  const yyyy = d.getFullYear()
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  return `/news/${yyyy}/${mm}${dd}/`
+})
 
 defineEmits<{
   uploadImage: [file: File]
@@ -93,14 +102,19 @@ function handleUpdateFilename(_imageId: string, oldFilename: string, newFilename
       </div>
 
       <div class="flex flex-column gap-2 flex-shrink-0">
-        <label for="edit-slug" class="font-medium text-sm">slug</label>
-        <InputText
-          id="edit-slug"
-          :model-value="slug ?? ''"
-          placeholder="article-slug (英数字、ハイフン、アンダースコア)"
-          :disabled="disabled"
-          @update:model-value="slug = $event || null"
-        />
+        <label for="edit-slug" class="font-medium text-sm">slug (記事のURL)</label>
+        <div class="flex align-items-center gap-1">
+          <span class="text-sm text-color-secondary white-space-nowrap">{{ slugPrefix }}</span>
+          <InputText
+            id="edit-slug"
+            :model-value="slug ?? ''"
+            placeholder="article-slug"
+            :disabled="disabled"
+            class="flex-1"
+            @update:model-value="slug = $event || null"
+          />
+          <span class="text-sm text-color-secondary">.html</span>
+        </div>
       </div>
 
       <div class="textarea-wrapper">
