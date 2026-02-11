@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, nextTick } from 'vue'
 import InputText from 'primevue/inputtext'
 import Textarea from 'primevue/textarea'
 import Button from 'primevue/button'
@@ -9,6 +9,19 @@ import type { SessionImage } from '@/types'
 const title = defineModel<string | null>('title')
 const slug = defineModel<string | null>('slug')
 const articleContent = defineModel<string | null>('articleContent')
+
+const lastCursorPosition = ref<number | null>(null)
+
+function getContentTextarea(): HTMLTextAreaElement | null {
+  return document.getElementById('edit-content') as HTMLTextAreaElement | null
+}
+
+function handleContentBlur() {
+  const el = getContentTextarea()
+  if (el) {
+    lastCursorPosition.value = el.selectionStart
+  }
+}
 
 defineProps<{
   images: SessionImage[]
@@ -28,8 +41,30 @@ const imagesPanelOpen = ref(true)
 function handleInsertImage(filename: string) {
   const tag = `![](${'./' + filename})`
   const current = articleContent.value ?? ''
-  // Append with a newline if content exists
-  articleContent.value = current ? current + '\n' + tag : tag
+
+  if (!current) {
+    articleContent.value = tag
+    return
+  }
+
+  const cursorPos = lastCursorPosition.value ?? current.length
+  // Find the end of the current line
+  const nextNewline = current.indexOf('\n', cursorPos)
+  const insertPos = nextNewline === -1 ? current.length : nextNewline
+  // Insert the tag one line after the cursor position
+  const before = current.substring(0, insertPos)
+  const after = current.substring(insertPos)
+  articleContent.value = before + '\n' + tag + after
+
+  const newCursorPos = insertPos + 1 + tag.length
+  nextTick(() => {
+    const el = getContentTextarea()
+    if (el) {
+      el.focus()
+      el.selectionStart = newCursorPos
+      el.selectionEnd = newCursorPos
+    }
+  })
 }
 
 function handleUpdateFilename(_imageId: string, oldFilename: string, newFilename: string) {
@@ -77,6 +112,7 @@ function handleUpdateFilename(_imageId: string, oldFilename: string, newFilename
           :disabled="disabled"
           class="editor-textarea"
           @update:model-value="articleContent = $event || null"
+          @blur="handleContentBlur"
         />
       </div>
     </div>
