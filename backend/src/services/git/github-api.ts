@@ -45,7 +45,8 @@ export async function getAppBotCommitter(): Promise<BotCommitter> {
 
 export async function createPullRequest(
   head: string,
-  title: string
+  title: string,
+  body?: string
 ): Promise<PullRequestInfo> {
   const octokit = getAppOctokit()
 
@@ -55,6 +56,7 @@ export async function createPullRequest(
     head,
     base: 'main',
     title,
+    body,
   })
 
   return {

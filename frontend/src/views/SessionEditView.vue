@@ -29,7 +29,6 @@ const articleContent = ref<string | null>(null)
 
 const isMerged = computed(() => session.value?.status === 'merged')
 const publishing = ref(false)
-
 let pollTimer: ReturnType<typeof setInterval> | null = null
 
 // Auto-save
