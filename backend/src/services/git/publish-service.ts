@@ -28,12 +28,12 @@ interface SessionForPublish {
   }[]
 }
 
-function formatEventDate(eventDate: string): string {
+export function formatEventDate(eventDate: string): string {
   const [year, month, day] = eventDate.split('-')
   return `${year}年${Number(month)}月${Number(day)}日`
 }
 
-function generateFrontmatter(
+export function generateFrontmatter(
   title: string,
   eventDate: string,
   eyecatchFilename: string | null
@@ -50,7 +50,7 @@ function generateFrontmatter(
   return lines.join('\n')
 }
 
-function getArticleDirPath(eventDate: string): string {
+export function getArticleDirPath(eventDate: string): string {
   // eventDate is YYYY-MM-DD
   const [year, month, day] = eventDate.split('-')
   return `src/news/${year}/${month}${day}`
