@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import InputText from 'primevue/inputtext'
 import RadioButton from 'primevue/radiobutton'
 import type { SessionImage } from '@/types'
@@ -17,6 +17,10 @@ const emit = defineEmits<{
 }>()
 
 const editingFilename = ref(props.image.customFilename)
+
+const imageUrl = computed(
+  () => `/api/sessions/${props.image.sessionId}/images/${props.image.id}/file`
+)
 
 watch(
   () => props.image.customFilename,
@@ -47,7 +51,7 @@ function formatFileSize(bytes: number): string {
       @click="emit('insertImage', image.customFilename)"
     >
       <img
-        :src="image.s3Url"
+        :src="imageUrl"
         :alt="image.customFilename"
         class="w-full block"
         style="height: 100px; object-fit: cover"

@@ -5,7 +5,7 @@ import { authMiddleware } from '../middlewares/auth'
 import { NotFoundError, ValidationError } from '../middlewares/error-handler'
 import { getDb } from '../db/client'
 import { sessions, sessionImages } from '../db/schema'
-import { uploadFile, deleteFile } from '../services/storage/s3-service'
+import { uploadFile, deleteFile, downloadFile } from '../services/storage/s3-service'
 
 const imagesRouter = new Hono()
 
@@ -188,6 +188,39 @@ imagesRouter.delete('/:id/images/:imageId', async (c) => {
   }
 
   return c.json({ success: true })
+})
+
+// GET /api/sessions/:id/images/:imageId/file - Serve image file via backend proxy
+imagesRouter.get('/:id/images/:imageId/file', async (c) => {
+  const user = c.get('user')
+  const sessionId = c.req.param('id')
+  const imageId = c.req.param('imageId')
+
+  // Verify session ownership (allow merged sessions for read-only access)
+  const db = getDb()
+  const session = await db.query.sessions.findFirst({
+    where: and(eq(sessions.id, sessionId), eq(sessions.userId, user.id)),
+  })
+  if (!session) {
+    throw new NotFoundError('Session not found')
+  }
+
+  // Verify image belongs to this session
+  const image = await db.query.sessionImages.findFirst({
+    where: and(eq(sessionImages.id, imageId), eq(sessionImages.sessionId, sessionId)),
+  })
+  if (!image) {
+    throw new NotFoundError('Image not found')
+  }
+
+  const fileBuffer = await downloadFile(image.s3Key)
+
+  return new Response(fileBuffer, {
+    headers: {
+      'Content-Type': image.mimeType,
+      'Cache-Control': 'private, max-age=3600',
+    },
+  })
 })
 
 export { imagesRouter }
