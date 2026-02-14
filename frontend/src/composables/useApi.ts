@@ -11,10 +11,33 @@ class ApiError extends Error {
   }
 }
 
+// モジュールレベルでリフレッシュ Promise を管理（排他制御）
+let refreshPromise: Promise<boolean> | null = null
+
+async function refreshAuthToken(): Promise<boolean> {
+  if (refreshPromise) return refreshPromise
+
+  refreshPromise = (async () => {
+    try {
+      const response = await fetch('/api/auth/refresh', {
+        method: 'POST',
+        credentials: 'include',
+      })
+      return response.ok
+    } catch {
+      return false
+    } finally {
+      refreshPromise = null
+    }
+  })()
+
+  return refreshPromise
+}
+
 export function useApi() {
   const toast = useToast()
 
-  async function request<T>(url: string, options?: RequestInit): Promise<T> {
+  async function request<T>(url: string, options?: RequestInit, _isRetry = false): Promise<T> {
     const response = await fetch(url, {
       ...options,
       credentials: 'include',
@@ -36,6 +59,12 @@ export function useApi() {
       const errorCode = errorData.error?.code || 'UNKNOWN_ERROR'
 
       if (response.status === 401) {
+        if (!_isRetry) {
+          const refreshed = await refreshAuthToken()
+          if (refreshed) {
+            return request<T>(url, options, true)
+          }
+        }
         window.location.href = '/login'
         throw new ApiError('Unauthorized', 'UNAUTHORIZED', 401)
       }
@@ -53,7 +82,7 @@ export function useApi() {
     return response.json()
   }
 
-  async function upload<T>(url: string, formData: FormData): Promise<T> {
+  async function upload<T>(url: string, formData: FormData, _isRetry = false): Promise<T> {
     const response = await fetch(url, {
       method: 'POST',
       credentials: 'include',
@@ -72,6 +101,12 @@ export function useApi() {
       const errorCode = errorData.error?.code || 'UNKNOWN_ERROR'
 
       if (response.status === 401) {
+        if (!_isRetry) {
+          const refreshed = await refreshAuthToken()
+          if (refreshed) {
+            return upload<T>(url, formData, true)
+          }
+        }
         window.location.href = '/login'
         throw new ApiError('Unauthorized', 'UNAUTHORIZED', 401)
       }

@@ -136,18 +136,43 @@ const initialized = ref(false)            // 初期化済みフラグ (二重実
 const isAuthenticated = computed(() => !!user.value)
 ```
 
-### 401 ハンドリング
+### 401 ハンドリング（自動リフレッシュ＆リトライ）
 
 ```typescript
 // composables/useApi.ts
 if (response.status === 401) {
-  window.location.href = '/login'  // 強制リダイレクト
+  if (!_isRetry) {
+    const refreshed = await refreshAuthToken()
+    if (refreshed) {
+      return request<T>(url, options, true) // リトライ
+    }
+  }
+  window.location.href = '/login'
 }
 ```
 
-**注意:** 現在の実装ではリフレッシュトークンによる自動再取得は行わず、
-401 発生時は即座にログイン画面にリダイレクトする。
-将来的にはリフレッシュを試みてからリダイレクトするように改善可能。
+API リクエストが 401 を返した場合、まず `/api/auth/refresh` でトークンリフレッシュを試みる。
+リフレッシュ成功時は元のリクエストを自動リトライする（1回のみ）。
+リフレッシュも失敗した場合（リフレッシュトークンの期限切れ等）にログイン画面へリダイレクトする。
+複数リクエストが同時に 401 を受けた場合、リフレッシュはモジュールレベルの排他制御により1回だけ実行される。
+
+### プロアクティブリフレッシュ
+
+```typescript
+// stores/auth.ts
+const REFRESH_INTERVAL = 13 * 60 * 1000 // 13分
+```
+
+JWT の有効期限（15分）が切れる前に、バックグラウンドで定期的にトークンをリフレッシュする。
+
+- **定期リフレッシュ:** 13分間隔（15分 - 2分バッファ）で `/api/auth/refresh` を呼び出し
+- **タブ復帰時リフレッシュ:** `visibilitychange` イベントを監視し、タブがフォアグラウンドに戻った際にリフレッシュを実行
+- リフレッシュ失敗時は認証状態をクリア（`user = null`）し、タイマーを停止
+
+### 初期化時のリフレッシュ
+
+ページリロード時に JWT が期限切れでも、リフレッシュトークンが有効であれば自動復帰する。
+`initialize()` で `/api/auth/me` が 401 を返した場合、リフレッシュを試みてからリトライする。
 
 ## ログアウト
 
