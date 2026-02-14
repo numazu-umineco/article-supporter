@@ -85,7 +85,9 @@ const renderedHtml = computed(() => {
 .markdown-preview :deep(p) { margin: 0.5rem 0; }
 
 .markdown-preview :deep(img) {
-  max-width: 100%;
+  display: block;
+  margin: auto;
+  max-width: 80%;
   height: auto;
   border-radius: 4px;
 }

@@ -2,10 +2,8 @@
 import { ref, computed, nextTick } from 'vue'
 import InputText from 'primevue/inputtext'
 import Textarea from 'primevue/textarea'
-import SelectButton from 'primevue/selectbutton'
 import Button from 'primevue/button'
 import ImageList from './ImageList.vue'
-import MarkdownPreview from '@/components/common/MarkdownPreview.vue'
 import type { SessionImage } from '@/types'
 
 const title = defineModel<string | null>('title')
@@ -30,7 +28,6 @@ const props = defineProps<{
   uploading: boolean
   disabled: boolean
   eventDate: string
-  baseUrl?: string
 }>()
 
 const slugPrefix = computed(() => {
@@ -47,22 +44,6 @@ defineEmits<{
   setEyecatch: [imageId: string]
   deleteImage: [imageId: string]
 }>()
-
-const editorMode = ref<'edit' | 'preview'>('edit')
-const editorModeOptions = [
-  { label: '編集', value: 'edit' },
-  { label: 'プレビュー', value: 'preview' },
-]
-
-function resolveImageSrc(src: string): string {
-  if (!src.startsWith('./')) return src
-  const filename = src.slice(2)
-  const image = props.images.find(img => img.customFilename === filename)
-  if (image) {
-    return `/api/sessions/${image.sessionId}/images/${image.id}/file`
-  }
-  return src
-}
 
 const imagesPanelOpen = ref(true)
 
@@ -137,19 +118,8 @@ function handleUpdateFilename(_imageId: string, oldFilename: string, newFilename
       </div>
 
       <div class="textarea-wrapper">
-        <div class="flex align-items-center justify-content-between flex-shrink-0">
-          <label for="edit-content" class="font-medium text-sm">記事本文 (Markdown)</label>
-          <SelectButton
-            v-model="editorMode"
-            :options="editorModeOptions"
-            option-label="label"
-            option-value="value"
-            :allow-empty="false"
-            size="small"
-          />
-        </div>
+        <label for="edit-content" class="font-medium text-sm flex-shrink-0">記事本文 (Markdown)</label>
         <Textarea
-          v-if="editorMode === 'edit'"
           id="edit-content"
           :model-value="articleContent ?? ''"
           placeholder="Markdown形式で記事本文を入力..."
@@ -157,13 +127,6 @@ function handleUpdateFilename(_imageId: string, oldFilename: string, newFilename
           class="editor-textarea"
           @update:model-value="articleContent = $event || null"
           @blur="handleContentBlur"
-        />
-        <MarkdownPreview
-          v-else
-          :content="articleContent ?? ''"
-          :base-url="baseUrl"
-          :image-resolver="resolveImageSrc"
-          class="preview-area"
         />
       </div>
     </div>
@@ -237,14 +200,5 @@ function handleUpdateFilename(_imageId: string, oldFilename: string, newFilename
 :deep(.editor-textarea textarea) {
   height: 100% !important;
   resize: none;
-}
-
-.preview-area {
-  flex: 1 1 0;
-  min-height: 0;
-  overflow-y: auto;
-  border: 1px solid var(--p-surface-300);
-  border-radius: var(--p-border-radius);
-  padding: 0.75rem;
 }
 </style>

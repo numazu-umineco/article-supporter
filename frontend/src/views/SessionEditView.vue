@@ -8,9 +8,15 @@ import { useAutoSave } from '@/composables/useAutoSave'
 import { useImages } from '@/composables/useImages'
 import { useApi } from '@/composables/useApi'
 import ProgressSpinner from 'primevue/progressspinner'
+import Tabs from 'primevue/tabs'
+import TabList from 'primevue/tablist'
+import Tab from 'primevue/tab'
+import TabPanels from 'primevue/tabpanels'
+import TabPanel from 'primevue/tabpanel'
 import SessionHeader from '@/components/session-edit/SessionHeader.vue'
 import ChatPane from '@/components/session-edit/ChatPane.vue'
 import EditorPane from '@/components/session-edit/EditorPane.vue'
+import MarkdownPreview from '@/components/common/MarkdownPreview.vue'
 import type { Session } from '@/types'
 
 const route = useRoute()
@@ -32,6 +38,17 @@ const articleContent = ref<string | null>(null)
 const isMerged = computed(() => session.value?.status === 'merged')
 const publishing = ref(false)
 const targetSiteBaseUrl = ref<string | undefined>()
+const leftPaneTab = ref<'chat' | 'preview'>('chat')
+
+function resolveImageSrc(src: string): string {
+  if (!src.startsWith('./')) return src
+  const filename = src.slice(2)
+  const image = images.value.find(img => img.customFilename === filename)
+  if (image) {
+    return `/api/sessions/${image.sessionId}/images/${image.id}/file`
+  }
+  return src
+}
 let pollTimer: ReturnType<typeof setInterval> | null = null
 
 // Auto-save
@@ -198,17 +215,35 @@ async function handlePublish() {
         @publish="handlePublish"
       />
 
-      <!-- 3-pane layout -->
+      <!-- 2-pane layout -->
       <div class="flex flex-1 overflow-hidden">
-        <!-- Left pane: Chat -->
+        <!-- Left pane: Chat / Preview tabs -->
         <div class="w-6 border-right-1 surface-border flex flex-column">
-          <ChatPane
-            :messages="messages"
-            :loading="loadingMessages"
-            :sending="sending"
-            :disabled="isMerged"
-            @send="handleSendMessage"
-          />
+          <Tabs v-model:value="leftPaneTab" class="left-pane-tabs" :dt="{ tablist: { background: 'transparent' }, tabpanel: { padding: '0' } }">
+            <TabList>
+              <Tab value="chat" class="flex align-items-center gap-2"><i class="pi pi-comments" />チャット</Tab>
+              <Tab value="preview" class="flex align-items-center gap-2"><i class="pi pi-eye" />プレビュー</Tab>
+            </TabList>
+            <TabPanels class="left-pane-panels">
+              <TabPanel value="chat" class="left-pane-panel">
+                <ChatPane
+                  :messages="messages"
+                  :loading="loadingMessages"
+                  :sending="sending"
+                  :disabled="isMerged"
+                  @send="handleSendMessage"
+                />
+              </TabPanel>
+              <TabPanel value="preview" class="left-pane-panel">
+                <MarkdownPreview
+                  :content="articleContent ?? ''"
+                  :base-url="targetSiteBaseUrl"
+                  :image-resolver="resolveImageSrc"
+                  class="preview-area"
+                />
+              </TabPanel>
+            </TabPanels>
+          </Tabs>
         </div>
 
         <!-- Right pane: Editor -->
@@ -221,7 +256,6 @@ async function handlePublish() {
             :uploading="uploading"
             :disabled="isMerged || sending"
             :event-date="session.eventDate"
-            :base-url="targetSiteBaseUrl"
             @upload-image="handleUploadImage"
             @update-image-filename="handleUpdateImageFilename"
             @set-eyecatch="handleSetEyecatch"
@@ -232,3 +266,37 @@ async function handlePublish() {
     </template>
   </div>
 </template>
+
+<style scoped>
+.left-pane-tabs {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.left-pane-panels {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+:deep(.left-pane-panels .p-tabpanels) {
+  height: 100%;
+}
+
+.left-pane-panel {
+  height: 100%;
+  overflow: hidden;
+}
+
+:deep(.left-pane-panel) {
+  height: 100%;
+}
+
+.preview-area {
+  height: 100%;
+  overflow-y: auto;
+  padding: 1rem;
+}
+</style>
