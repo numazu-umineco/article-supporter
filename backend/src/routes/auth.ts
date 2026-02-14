@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie'
-import { eq, and, gt } from 'drizzle-orm'
+import { eq, and, gt, lt, or, isNull, isNotNull } from 'drizzle-orm'
 import { getDb } from '../db/client'
 import { users, refreshTokens } from '../db/schema'
 import { env } from '../config/env'
@@ -26,6 +26,7 @@ const REFRESH_TOKEN_EXPIRY_DAYS = 30
 const AUTH_TOKEN_MAX_AGE = 60 * 15 // 15 minutes
 const REFRESH_TOKEN_MAX_AGE = 60 * 60 * 24 * REFRESH_TOKEN_EXPIRY_DAYS // 30 days
 const OAUTH_STATE_MAX_AGE = 60 * 10 // 10 minutes
+const ROTATION_GRACE_SECONDS = 30
 
 function getCallbackUrl(): string {
   return `${env.FRONTEND_URL}/api/auth/callback`
@@ -166,6 +167,9 @@ auth.post('/refresh', async (c) => {
   const db = getDb()
 
   // Find valid refresh token with user
+  // グレース期間内のローテーション済みトークンも有効として扱う（複数タブ対応）
+  const graceWindow = new Date(Date.now() - ROTATION_GRACE_SECONDS * 1000)
+
   const result = await db
     .select({
       token: refreshTokens,
@@ -176,7 +180,11 @@ auth.post('/refresh', async (c) => {
     .where(
       and(
         eq(refreshTokens.tokenHash, tokenHash),
-        gt(refreshTokens.expiresAt, new Date())
+        gt(refreshTokens.expiresAt, new Date()),
+        or(
+          isNull(refreshTokens.rotatedAt),
+          gt(refreshTokens.rotatedAt, graceWindow)
+        )
       )
     )
     .limit(1)
@@ -189,8 +197,12 @@ auth.post('/refresh', async (c) => {
 
   const { token: oldToken, user } = result[0]
 
-  // Delete old refresh token (token rotation)
-  await db.delete(refreshTokens).where(eq(refreshTokens.id, oldToken.id))
+  // まだローテーションされていない場合のみ rotatedAt を設定
+  if (!oldToken.rotatedAt) {
+    await db.update(refreshTokens)
+      .set({ rotatedAt: new Date() })
+      .where(eq(refreshTokens.id, oldToken.id))
+  }
 
   // Generate new JWT
   const jwt = await signJWT({
@@ -210,6 +222,15 @@ auth.post('/refresh', async (c) => {
     tokenHash: newTokenHash,
     expiresAt,
   })
+
+  // グレース期間を過ぎたローテーション済みトークンをクリーンアップ
+  await db.delete(refreshTokens).where(
+    and(
+      eq(refreshTokens.userId, user.id),
+      isNotNull(refreshTokens.rotatedAt),
+      lt(refreshTokens.rotatedAt, graceWindow)
+    )
+  )
 
   // Set new cookies
   setCookie(c, 'auth_token', jwt, {
