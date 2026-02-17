@@ -12,10 +12,12 @@ const props = defineProps<{
   loading: boolean
   sending: boolean
   disabled: boolean
+  showEditorButton?: boolean
 }>()
 
 const emit = defineEmits<{
   send: [content: string]
+  showEditor: []
 }>()
 
 const messageInput = ref('')
@@ -36,9 +38,9 @@ function handleKeydown(e: KeyboardEvent) {
   }
 }
 
-// Auto-scroll to bottom when messages change
+// Auto-scroll to bottom when messages change or editor button appears
 watch(
-  () => props.messages.length,
+  () => [props.messages.length, props.showEditorButton],
   async () => {
     await nextTick()
     if (chatContainer.value) {
@@ -71,7 +73,7 @@ watch(
         <div v-if="sending" class="flex justify-content-start mb-3">
           <Avatar
             label="S"
-            class="mr-2" 
+            class="mr-2"
             shape="circle"
           />
           <div class="surface-100 border-round-lg px-3 py-2 typing-bubble">
@@ -79,6 +81,15 @@ watch(
             <span class="typing-dot" />
             <span class="typing-dot" />
           </div>
+        </div>
+        <div v-if="showEditorButton && !sending" class="flex justify-content-center">
+          <Button
+            label="編集画面を表示"
+            icon="pi pi-pencil"
+            severity="secondary"
+            outlined
+            @click="emit('showEditor')"
+          />
         </div>
       </template>
     </div>

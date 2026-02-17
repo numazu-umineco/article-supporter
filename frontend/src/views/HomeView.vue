@@ -2,6 +2,7 @@
 import { computed, ref, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useSessions } from '@/composables/useSessions'
+import { useMediaQuery } from '@/composables/useMediaQuery'
 import { useRouter } from 'vue-router'
 import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
@@ -20,6 +21,7 @@ const confirm = useConfirm()
 const toast = useToast()
 const { sessions, loading, fetchSessions, deleteSession } = useSessions()
 
+const isMdScreen = useMediaQuery('(min-width: 768px)')
 const showNewSessionDialog = ref(false)
 
 const avatarImage = computed(() => authStore.user?.githubAvatarUrl ?? undefined)
@@ -71,13 +73,13 @@ async function handleLogout() {
             :label="avatarLabel"
             shape="circle"
           />
-          <span class="font-medium">{{ authStore.user.githubLogin }}</span>
+          <span class="font-medium hidden md:inline">{{ authStore.user.githubLogin }}</span>
         </div>
         <Button
           icon="pi pi-cog"
-          label="イベント種類管理"
-          severity="secondary"
-          text
+          :label="isMdScreen ? 'イベント種類管理' : undefined"
+          variant="outlined"
+          severity="info"
           @click="router.push('/event-types')"
         />
         <Button icon="pi pi-sign-out" variant="outlined" severity="secondary" @click="handleLogout" />
@@ -85,7 +87,7 @@ async function handleLogout() {
     </AppHeader>
 
     <!-- Main content -->
-    <main class="grid grid-nogutter justify-content-center p-4">
+    <main class="grid grid-nogutter justify-content-center px-3 py-4">
       <div class="col-12 lg:col-10">
         <div class="flex justify-content-between align-items-center mb-4">
           <h2 class="text-2xl font-bold m-0">セッション一覧</h2>

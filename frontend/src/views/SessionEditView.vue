@@ -7,7 +7,9 @@ import { useChat } from '@/composables/useChat'
 import { useAutoSave } from '@/composables/useAutoSave'
 import { useImages } from '@/composables/useImages'
 import { useApi } from '@/composables/useApi'
+import { useMediaQuery } from '@/composables/useMediaQuery'
 import ProgressSpinner from 'primevue/progressspinner'
+import Button from 'primevue/button'
 import Tabs from 'primevue/tabs'
 import TabList from 'primevue/tablist'
 import Tab from 'primevue/tab'
@@ -39,6 +41,27 @@ const isMerged = computed(() => session.value?.status === 'merged')
 const publishing = ref(false)
 const targetSiteBaseUrl = ref<string | undefined>()
 const leftPaneTab = ref<'chat' | 'preview'>('chat')
+
+// Responsive layout
+const isDesktop = useMediaQuery('(min-width: 992px)')
+const mobileOverlayOpen = ref(false)
+const showEditorButton = ref(false)
+
+function openMobileOverlay(tab: 'chat' | 'preview') {
+  leftPaneTab.value = tab
+  mobileOverlayOpen.value = true
+}
+
+function closeMobileOverlay() {
+  mobileOverlayOpen.value = false
+}
+
+// Close overlay when switching to desktop
+watch(isDesktop, (desktop) => {
+  if (desktop) {
+    mobileOverlayOpen.value = false
+  }
+})
 
 function resolveImageSrc(src: string): string {
   if (!src.startsWith('./')) return src
@@ -94,12 +117,21 @@ onMounted(async () => {
           session.value = await getSession(sessionId)
           if (session.value.title) title.value = session.value.title
           if (session.value.slug) slug.value = session.value.slug
-          if (session.value.articleContent) articleContent.value = session.value.articleContent
+          if (session.value.articleContent) {
+            articleContent.value = session.value.articleContent
+            showEditorButton.value = true
+          }
         }
       }, 2000)
     }
   } finally {
     loadingSession.value = false
+  }
+
+  // Open chat overlay on mobile
+  if (!isDesktop.value) {
+    mobileOverlayOpen.value = true
+    leftPaneTab.value = 'chat'
   }
 
   // Fetch config (non-critical, ignore errors)
@@ -119,6 +151,8 @@ onUnmounted(() => {
 })
 
 async function handleSendMessage(content: string) {
+  showEditorButton.value = false
+
   const result = await sendMessage(content, {
     title: title.value,
     slug: slug.value,
@@ -132,6 +166,7 @@ async function handleSendMessage(content: string) {
     if (result.article.content !== undefined) articleContent.value = result.article.content
     // Refresh session to get updated data
     session.value = await getSession(sessionId)
+    showEditorButton.value = true
   }
 }
 
@@ -212,56 +247,149 @@ async function handlePublish() {
         :saving="saving"
         :saved="saved"
         :publishing="publishing"
+        :compact="!isDesktop"
         @publish="handlePublish"
       />
 
-      <!-- 2-pane layout -->
-      <div class="flex flex-1 overflow-hidden">
-        <!-- Left pane: Chat / Preview tabs -->
-        <div class="w-6 border-right-1 surface-border flex flex-column">
-          <Tabs v-model:value="leftPaneTab" class="left-pane-tabs" :dt="{ tablist: { background: 'transparent' }, tabpanel: { padding: '0' } }">
-            <TabList>
-              <Tab value="chat" class="flex align-items-center gap-2"><i class="pi pi-comments" />チャット</Tab>
-              <Tab value="preview" class="flex align-items-center gap-2"><i class="pi pi-eye" />プレビュー</Tab>
-            </TabList>
-            <TabPanels class="left-pane-panels">
-              <TabPanel value="chat" class="left-pane-panel">
-                <ChatPane
-                  :messages="messages"
-                  :loading="loadingMessages"
-                  :sending="sending"
-                  :disabled="isMerged"
-                  @send="handleSendMessage"
-                />
-              </TabPanel>
-              <TabPanel value="preview" class="left-pane-panel">
-                <MarkdownPreview
-                  :content="articleContent ?? ''"
-                  :base-url="targetSiteBaseUrl"
-                  :image-resolver="resolveImageSrc"
-                  class="preview-area"
-                />
-              </TabPanel>
-            </TabPanels>
-          </Tabs>
-        </div>
+      <!-- Main content area -->
+      <div class="flex flex-1 overflow-hidden relative">
 
-        <!-- Right pane: Editor -->
-        <div class="w-6 flex flex-column">
-          <EditorPane
-            v-model:title="title"
-            v-model:slug="slug"
-            v-model:article-content="articleContent"
-            :images="images"
-            :uploading="uploading"
-            :disabled="isMerged || sending"
-            :event-date="session.eventDate"
-            @upload-image="handleUploadImage"
-            @update-image-filename="handleUpdateImageFilename"
-            @set-eyecatch="handleSetEyecatch"
-            @delete-image="handleDeleteImage"
-          />
-        </div>
+        <!-- ===== Desktop: side-by-side ===== -->
+        <template v-if="isDesktop">
+          <!-- Left pane: Chat / Preview tabs -->
+          <div class="w-6 border-right-1 surface-border flex flex-column">
+            <Tabs v-model:value="leftPaneTab" class="left-pane-tabs" :dt="{ tablist: { background: 'transparent' }, tabpanel: { padding: '0' } }">
+              <TabList>
+                <Tab value="chat" class="flex align-items-center gap-2"><i class="pi pi-comments" />チャット</Tab>
+                <Tab value="preview" class="flex align-items-center gap-2"><i class="pi pi-eye" />プレビュー</Tab>
+              </TabList>
+              <TabPanels class="left-pane-panels">
+                <TabPanel value="chat" class="left-pane-panel">
+                  <ChatPane
+                    :messages="messages"
+                    :loading="loadingMessages"
+                    :sending="sending"
+                    :disabled="isMerged"
+                    @send="handleSendMessage"
+                  />
+                </TabPanel>
+                <TabPanel value="preview" class="left-pane-panel">
+                  <MarkdownPreview
+                    :content="articleContent ?? ''"
+                    :base-url="targetSiteBaseUrl"
+                    :image-resolver="resolveImageSrc"
+                    class="preview-area"
+                  />
+                </TabPanel>
+              </TabPanels>
+            </Tabs>
+          </div>
+
+          <!-- Right pane: Editor -->
+          <div class="w-6 flex flex-column">
+            <EditorPane
+              v-model:title="title"
+              v-model:slug="slug"
+              v-model:article-content="articleContent"
+              :images="images"
+              :uploading="uploading"
+              :disabled="isMerged || sending"
+              :event-date="session.eventDate"
+              @upload-image="handleUploadImage"
+              @update-image-filename="handleUpdateImageFilename"
+              @set-eyecatch="handleSetEyecatch"
+              @delete-image="handleDeleteImage"
+            />
+          </div>
+        </template>
+
+        <!-- ===== Mobile: full-width editor + icon sidebar + overlay ===== -->
+        <template v-else>
+          <!-- Icon sidebar -->
+          <div class="mobile-sidebar surface-card border-right-1 surface-border flex flex-column align-items-center py-2 gap-2">
+            <Button
+              icon="pi pi-comments"
+              :severity="mobileOverlayOpen && leftPaneTab === 'chat' ? 'primary' : 'secondary'"
+              text
+              rounded
+              v-tooltip.right="'チャット'"
+              @click="openMobileOverlay('chat')"
+            />
+            <Button
+              icon="pi pi-eye"
+              :severity="mobileOverlayOpen && leftPaneTab === 'preview' ? 'primary' : 'secondary'"
+              text
+              rounded
+              v-tooltip.right="'プレビュー'"
+              @click="openMobileOverlay('preview')"
+            />
+          </div>
+
+          <!-- Editor + Overlay container -->
+          <div class="mobile-content-area">
+            <EditorPane
+              v-model:title="title"
+              v-model:slug="slug"
+              v-model:article-content="articleContent"
+              :images="images"
+              :uploading="uploading"
+              :disabled="isMerged || sending"
+              :event-date="session.eventDate"
+              @upload-image="handleUploadImage"
+              @update-image-filename="handleUpdateImageFilename"
+              @set-eyecatch="handleSetEyecatch"
+              @delete-image="handleDeleteImage"
+            />
+
+            <!-- Overlay: Chat / Preview -->
+            <Transition name="mobile-overlay">
+              <div
+                v-if="mobileOverlayOpen"
+                class="mobile-overlay surface-card flex flex-column"
+              >
+                <!-- Tab bar + close button -->
+                <div class="mobile-overlay-header border-bottom-1 surface-border">
+                  <Tabs v-model:value="leftPaneTab" :dt="{ tablist: { background: 'transparent' }, tabpanel: { padding: '0' } }">
+                    <TabList>
+                      <Tab value="chat" class="flex align-items-center gap-2"><i class="pi pi-comments" />チャット</Tab>
+                      <Tab value="preview" class="flex align-items-center gap-2"><i class="pi pi-eye" />プレビュー</Tab>
+                    </TabList>
+                  </Tabs>
+                  <Button
+                    icon="pi pi-times"
+                    severity="secondary"
+                    text
+                    rounded
+                    class="mobile-overlay-close"
+                    @click="closeMobileOverlay"
+                  />
+                </div>
+
+                <!-- Content -->
+                <div class="flex-1 overflow-hidden">
+                  <ChatPane
+                    v-if="leftPaneTab === 'chat'"
+                    :messages="messages"
+                    :loading="loadingMessages"
+                    :sending="sending"
+                    :disabled="isMerged"
+                    :show-editor-button="showEditorButton"
+                    @send="handleSendMessage"
+                    @show-editor="closeMobileOverlay"
+                  />
+                  <MarkdownPreview
+                    v-else
+                    :content="articleContent ?? ''"
+                    :base-url="targetSiteBaseUrl"
+                    :image-resolver="resolveImageSrc"
+                    class="preview-area"
+                  />
+                </div>
+              </div>
+            </Transition>
+          </div>
+        </template>
+
       </div>
     </template>
   </div>
@@ -298,5 +426,62 @@ async function handlePublish() {
   height: 100%;
   overflow-y: auto;
   padding: 1rem;
+}
+
+/* Mobile icon sidebar */
+.mobile-sidebar {
+  width: 48px;
+  flex-shrink: 0;
+}
+
+/* Mobile editor + overlay container */
+.mobile-content-area {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Mobile overlay */
+.mobile-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+}
+
+.mobile-overlay-header {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.mobile-overlay-header :deep(.p-tabs) {
+  flex: 1;
+}
+
+.mobile-overlay-close {
+  flex-shrink: 0;
+  margin-right: 0.5rem;
+}
+
+/* Overlay slide-in transition */
+.mobile-overlay-enter-active {
+  transition: transform 0.25s ease-out, opacity 0.25s ease-out;
+}
+
+.mobile-overlay-leave-active {
+  transition: transform 0.2s ease-in, opacity 0.2s ease-in;
+}
+
+.mobile-overlay-enter-from,
+.mobile-overlay-leave-to {
+  transform: translateX(-100%);
+  opacity: 0;
 }
 </style>

@@ -8,6 +8,8 @@ import Aura from '@primevue/themes/aura'
 import App from './App.vue'
 import router from './router'
 
+import Tooltip from 'primevue/tooltip'
+
 import 'primeicons/primeicons.css'
 import 'primeflex/primeflex.css'
 import './assets/styles/main.css'
@@ -20,8 +22,17 @@ app.use(PrimeVue, {
   theme: {
     preset: Aura,
   },
+  pt: {
+    dialog: {
+      root: { class: 'm-3' },
+    },
+    confirmdialog: {
+      root: { class: 'm-3' },
+    },
+  },
 })
 app.use(ToastService)
 app.use(ConfirmationService)
+app.directive('tooltip', Tooltip)
 
 app.mount('#app')

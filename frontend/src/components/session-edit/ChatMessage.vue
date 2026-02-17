@@ -24,10 +24,10 @@ const displayContent = computed(() => {
     class="flex mb-3 align-items-start"
     :class="isUser ? 'justify-content-end' : 'justify-content-start'"
   >
-    <Avatar 
+    <Avatar
       v-if="!isUser"
       label="S"
-      class="mr-2" 
+      class="mr-2 flex-shrink-0"
       shape="circle"
     />
     <div
