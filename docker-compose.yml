@@ -49,3 +49,33 @@ services:
       mc anonymous set public myrustfs/article-supporter;
       exit 0;
       "
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: article-supporter-backend
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/article_supporter
+      S3_ENDPOINT: http://rustfs:9000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      createbucket:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: article-supporter-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
