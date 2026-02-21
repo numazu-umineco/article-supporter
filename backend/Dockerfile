@@ -34,7 +34,6 @@ COPY --from=builder /app/backend/dist ./backend/dist
 
 # Copy drizzle migrations
 COPY backend/drizzle ./backend/drizzle
-COPY backend/drizzle.config.ts ./backend/
 
 EXPOSE 3000
 
