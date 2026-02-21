@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon --watch src --ext ts,json --exec 'tsx src/index.ts'",
-    "build": "tsc",
+    "build": "tsup",
     "start": "node dist/index.js",
     "lint": "eslint src/",
     "test": "vitest run",
@@ -34,6 +34,7 @@
     "@types/node": "^22.10.7",
     "drizzle-kit": "^0.30.4",
     "nodemon": "^3.1.11",
+    "tsup": "^8.5.1",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3",
     "vitest": "^4.0.18"

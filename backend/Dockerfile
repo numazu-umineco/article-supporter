@@ -12,7 +12,7 @@ RUN npm ci -w backend
 
 # Copy backend source
 COPY backend/src ./backend/src
-COPY backend/tsconfig.json ./backend/
+COPY backend/tsconfig.json backend/tsup.config.ts ./backend/
 
 # Build TypeScript
 RUN npm run build -w backend
