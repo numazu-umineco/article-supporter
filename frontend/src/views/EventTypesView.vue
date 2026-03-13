@@ -5,10 +5,10 @@ import { useAuthStore } from '@/stores/auth'
 import { useEventTypes } from '@/composables/useEventTypes'
 import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
 import Button from 'primevue/button'
+import Card from 'primevue/card'
 import Tag from 'primevue/tag'
+import ProgressSpinner from 'primevue/progressspinner'
 import AppHeader from '@/components/AppHeader.vue'
 import EventTypeForm from '@/components/event-types/EventTypeForm.vue'
 import type { EventType } from '@/types'
@@ -98,55 +98,62 @@ async function handleLogout() {
     </AppHeader>
 
     <!-- Main content -->
-    <main class="grid grid-nogutter justify-content-center p-4">
+    <main class="grid grid-nogutter justify-content-center px-3 py-4">
       <div class="col-12 lg:col-10">
         <div class="flex justify-content-between align-items-center mb-4">
           <h2 class="text-2xl font-bold m-0">イベント種類一覧</h2>
           <Button label="新規作成" icon="pi pi-plus" @click="handleCreate" />
         </div>
 
-        <DataTable :value="eventTypes" :loading="loading" striped-rows>
-          <template #empty>
-            <p class="text-center text-600 py-3">イベント種類がまだ登録されていません。</p>
-          </template>
+        <div class="surface-card border-round p-3 mb-3 text-sm text-600 flex flex-column gap-2">
+          <h4 class="m-0 mb-2"><i class="pi pi-info-circle mr-1" /> イベント種類とは</h4>
+          <p class="m-0">イベント種類とは、LLMの起動時に最初に渡される、いわゆる「システムプロンプト」です。</p>
+          <p class="m-0">過去記事の例やテンプレート、文章として変えない箇所を指定することで、作成される記事の品質やスタイルをコントロールできます。</p>
+          <p class="m-0">作成されたイベント種類はすべてのアカウントで共有されます。</p>
+        </div>
 
-          <Column field="name" header="名前" />
-          <Column field="description" header="説明">
-            <template #body="{ data }">
-              <span class="text-600">{{ data.description || '-' }}</span>
-            </template>
-          </Column>
-          <Column field="isActive" header="ステータス" :style="{ width: '120px' }">
-            <template #body="{ data }">
-              <Tag
-                :value="data.isActive ? '有効' : '無効'"
-                :severity="data.isActive ? 'success' : 'secondary'"
-              />
-            </template>
-          </Column>
-          <Column header="操作" :style="{ width: '150px' }">
-            <template #body="{ data }">
-              <div class="flex gap-2">
-                <Button
-                  icon="pi pi-pencil"
-                  severity="secondary"
-                  text
-                  rounded
-                  size="small"
-                  @click="handleEdit(data)"
-                />
-                <Button
-                  icon="pi pi-trash"
-                  severity="danger"
-                  text
-                  rounded
-                  size="small"
-                  @click="handleDelete(data)"
-                />
+        <div v-if="loading" class="flex justify-content-center py-5">
+          <ProgressSpinner />
+        </div>
+
+        <p v-else-if="eventTypes.length === 0" class="text-center text-600 py-3">
+          イベント種類がまだ登録されていません。
+        </p>
+
+        <div v-else class="flex flex-column gap-3">
+          <Card v-for="eventType in eventTypes" :key="eventType.id">
+            <template #content>
+              <div class="flex flex-column gap-2">
+                <div class="flex align-items-center gap-2 flex-wrap">
+                  <Tag
+                    :value="eventType.isActive ? '有効' : '無効'"
+                    :severity="eventType.isActive ? 'success' : 'secondary'"
+                  />
+                </div>
+                <h3 class="text-lg font-bold m-0">{{ eventType.name }}</h3>
+                <span v-if="eventType.description" class="text-600">{{ eventType.description }}</span>
+                <div class="flex align-items-center gap-2 mt-2">
+                  <Button
+                    class="flex-1"
+                    icon="pi pi-pencil"
+                    severity="primary"
+                    variant="outlined"
+                    label="編集する"
+                    @click="handleEdit(eventType)"
+                  />
+                  <Button
+                    class="flex-1"
+                    icon="pi pi-trash"
+                    severity="danger"
+                    variant="outlined"
+                    label="削除する"
+                    @click="handleDelete(eventType)"
+                  />
+                </div>
               </div>
             </template>
-          </Column>
-        </DataTable>
+          </Card>
+        </div>
       </div>
     </main>
 
