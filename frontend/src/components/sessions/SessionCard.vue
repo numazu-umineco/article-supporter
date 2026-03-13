@@ -50,38 +50,47 @@ function formatDate(dateStr: string) {
 </script>
 
 <template>
-  <Card class="cursor-pointer session-card" @click="emit('click')">
+  <Card class="session-card">
     <template #content>
-      <div class="flex justify-content-between align-items-start">
-        <div class="flex-1">
-          <div class="flex align-items-center gap-2 mb-2">
-            <h3 class="text-lg font-bold m-0">{{ displayTitle }}</h3>
-            <Tag :value="statusLabel" :severity="statusSeverity" />
-          </div>
-          <div class="flex flex-column gap-1 text-sm text-600">
-            <span><i class="pi pi-tag mr-1" />{{ eventTypeName }}</span>
-            <span><i class="pi pi-calendar mr-1" />{{ formatDate(session.eventDate) }}</span>
-            <span class="text-xs">更新: {{ formatDate(session.updatedAt) }}</span>
-          </div>
-          <a
-            v-if="session.prUrl"
-            :href="session.prUrl"
-            target="_blank"
-            class="text-sm mt-2 inline-block"
-            @click.stop
-          >
-            <i class="pi pi-external-link mr-1" />PR #{{ session.prNumber }}
-          </a>
+      <div class="flex flex-column gap-2">
+        <div class="flex align-items-center gap-2 flex-wrap">
+          <Tag :value="statusLabel" :severity="statusSeverity" />
+          <span class="text-xs text-600">最終更新: {{ formatDate(session.updatedAt) }}</span>
         </div>
-        <div class="flex gap-1">
+        <h3 class="text-lg font-bold m-0">{{ displayTitle }}</h3>
+        <div class="flex align-items-center gap-2">
+          <span class="text-600"><i class="pi pi-tag mr-1" />{{ eventTypeName }}</span>
+          <span class="text-600"><i class="pi pi-calendar mr-1" />{{ formatDate(session.eventDate) }}</span>
+        </div>
+        <div class="flex align-item-center gap-2 mt-3">
+          <Button
+            class="flex-1"
+            icon="pi pi-pencil"
+            severity="primary"
+            variant="outlined"
+            label="編集画面へ"
+            @click.stop="emit('click')"
+          />
           <Button
             v-if="session.status === 'draft'"
+            class="flex-1"
             icon="pi pi-trash"
             severity="danger"
-            text
-            rounded
-            size="small"
+            variant="outlined"
+            label="削除する"
             @click.stop="emit('delete')"
+          />
+          <Button
+            v-if="session.prUrl"
+            as="a"
+            class="flex-1"
+            :href="session.prUrl"
+            target="_blank"
+            icon="pi pi-external-link"
+            severity="secondary"
+            variant="outlined"
+            label="PRを見る"
+            @click.stop
           />
         </div>
       </div>
@@ -90,7 +99,7 @@ function formatDate(dateStr: string) {
 </template>
 
 <style scoped>
-.session-card:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+.session-card a {
+  text-decoration: none;
 }
 </style>
