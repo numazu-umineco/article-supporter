@@ -16,12 +16,13 @@ export interface ChatCompletionMessage {
 }
 
 export async function getChatCompletion(
-  messages: ChatCompletionMessage[]
+  messages: ChatCompletionMessage[],
+  model: string = 'gpt-4o-mini'
 ): Promise<string> {
   const openai = getClient()
 
   const response = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
+    model,
     messages,
   })
 

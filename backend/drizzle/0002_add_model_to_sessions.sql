@@ -1,0 +1,1 @@
+ALTER TABLE "sessions" ADD COLUMN "model" varchar(100) DEFAULT 'gpt-4o-mini' NOT NULL;

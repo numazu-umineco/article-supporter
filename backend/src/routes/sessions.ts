@@ -9,6 +9,7 @@ import {
   updateSession,
   deleteSession,
 } from '../services/session'
+import { AVAILABLE_MODELS } from '../config/models'
 
 const sessionsRouter = new Hono()
 
@@ -17,6 +18,7 @@ sessionsRouter.use('*', authMiddleware)
 const createSchema = z.object({
   eventTypeId: z.string().uuid('Invalid event type ID'),
   eventDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD format'),
+  model: z.enum(AVAILABLE_MODELS).optional(),
 })
 
 const updateSchema = z.object({
@@ -59,6 +61,7 @@ sessionsRouter.post('/', async (c) => {
     userId: user.id,
     eventTypeId: parsed.data.eventTypeId,
     eventDate: parsed.data.eventDate,
+    model: parsed.data.model,
   })
   return c.json(result, 201)
 })

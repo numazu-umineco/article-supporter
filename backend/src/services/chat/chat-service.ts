@@ -119,7 +119,7 @@ export async function sendMessage(
   }
 
   // Call OpenAI
-  const aiResponse = await getChatCompletion(openaiMessages)
+  const aiResponse = await getChatCompletion(openaiMessages, session.model)
 
   // Parse article from response
   const { article, displayText } = parseArticle(aiResponse)

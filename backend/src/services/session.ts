@@ -37,6 +37,7 @@ export async function createSession(data: {
   userId: string
   eventTypeId: string
   eventDate: string
+  model?: string
 }) {
   const db = getDb()
 
@@ -55,6 +56,7 @@ export async function createSession(data: {
       userId: data.userId,
       eventTypeId: data.eventTypeId,
       eventDate: data.eventDate,
+      ...(data.model && { model: data.model }),
     })
     .returning()
 
