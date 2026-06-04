@@ -21,8 +21,14 @@ const { eventTypes, loading: loadingEventTypes, fetchEventTypes } = useEventType
 
 const eventDate = ref<Date | null>(null)
 const selectedEventTypeId = ref<string | null>(null)
+interface ModelOption {
+  id: string
+  label: string
+  provider: string
+}
+
 const selectedModel = ref<string | null>(null)
-const availableModels = ref<string[]>([])
+const availableModels = ref<ModelOption[]>([])
 const defaultModel = ref<string>('gpt-4o-mini')
 const customPrompt = ref('')
 const creating = ref(false)
@@ -36,7 +42,7 @@ watch(visible, async (val) => {
     fetchEventTypes(true)
 
     try {
-      const config = await api.get<{ availableModels: string[]; defaultModel: string }>('/api/config')
+      const config = await api.get<{ availableModels: ModelOption[]; defaultModel: string }>('/api/config')
       availableModels.value = config.availableModels
       defaultModel.value = config.defaultModel
       selectedModel.value = config.defaultModel
@@ -139,6 +145,8 @@ async function handleCreate() {
           id="model"
           v-model="selectedModel"
           :options="availableModels"
+          option-label="label"
+          option-value="id"
           placeholder="モデルを選択"
           :disabled="creating || availableModels.length === 0"
         />

@@ -1,7 +1,7 @@
 import { eq, asc } from 'drizzle-orm'
 import { getDb } from '../../db/client'
 import { chatMessages, sessions } from '../../db/schema'
-import { getChatCompletion, type ChatCompletionMessage } from './openai-client'
+import { getChatCompletion, type ChatCompletionMessage } from './llm-client'
 import { parseArticle } from './article-parser'
 import { NotFoundError } from '../../middlewares/error-handler'
 

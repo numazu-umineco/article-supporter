@@ -1,5 +1,6 @@
 import OpenAI from 'openai'
 import { env } from '../../config/env'
+import type { ChatCompletionMessage } from './llm-client'
 
 let client: OpenAI | null = null
 
@@ -10,14 +11,9 @@ function getClient(): OpenAI {
   return client
 }
 
-export interface ChatCompletionMessage {
-  role: 'system' | 'user' | 'assistant'
-  content: string
-}
-
-export async function getChatCompletion(
+export async function getOpenAIChatCompletion(
   messages: ChatCompletionMessage[],
-  model: string = 'gpt-4o-mini'
+  model: string
 ): Promise<string> {
   const openai = getClient()
 
