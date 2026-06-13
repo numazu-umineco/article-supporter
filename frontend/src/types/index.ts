@@ -41,7 +41,7 @@ export interface Session {
   updatedAt: string
 }
 
-export type SessionStatus = 'draft' | 'pr_created' | 'merged'
+export type SessionStatus = 'draft' | 'pr_created' | 'merged' | 'closed'
 
 // Chat message type
 export interface ChatMessage {
