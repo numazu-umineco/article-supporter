@@ -19,8 +19,9 @@ const envSchema = z.object({
   GITHUB_REPO: z.string(),
   GITHUB_ORG: z.string(),
 
-  // OpenAI
+  // LLM
   OPENAI_API_KEY: z.string(),
+  GOOGLE_AI_API_KEY: z.string(),
 
   // JWT
   JWT_SECRET: z.string().min(32),

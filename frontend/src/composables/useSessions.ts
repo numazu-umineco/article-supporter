@@ -20,7 +20,7 @@ export function useSessions() {
     return api.get<Session>(`/api/sessions/${id}`)
   }
 
-  async function createSession(data: { eventTypeId: string; eventDate: string }) {
+  async function createSession(data: { eventTypeId: string; eventDate: string; model?: string }) {
     return api.post<Session>('/api/sessions', data)
   }
 

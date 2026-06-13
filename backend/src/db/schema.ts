@@ -38,6 +38,7 @@ export const sessions = pgTable('sessions', {
   prUrl: text('pr_url'),
   prNumber: integer('pr_number'),
   branchName: varchar('branch_name', { length: 255 }),
+  model: varchar('model', { length: 100 }).default('gpt-4o-mini').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 })
