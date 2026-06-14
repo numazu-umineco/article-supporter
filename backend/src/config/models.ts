@@ -8,6 +8,7 @@ export interface ModelDefinition {
 
 export const AVAILABLE_MODELS: ModelDefinition[] = [
   { id: 'gpt-4o-mini', label: 'GPT-4o mini', provider: 'openai' },
+  { id: 'gpt-5.4-nano', label: 'GPT-5.4 nano', provider: 'openai' },
 ]
 
 export const DEFAULT_MODEL = 'gpt-4o-mini'
