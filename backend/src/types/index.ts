@@ -35,7 +35,7 @@ export interface ApiResponse<T> {
 }
 
 // Session status
-export type SessionStatus = 'draft' | 'pr_created' | 'merged'
+export type SessionStatus = 'draft' | 'pr_created' | 'merged' | 'closed'
 
 // Chat message role
 export type ChatRole = 'user' | 'assistant'

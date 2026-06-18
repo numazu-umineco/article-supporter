@@ -22,6 +22,8 @@ const statusLabel = computed(() => {
       return 'PR作成済み'
     case 'merged':
       return 'マージ済み'
+    case 'closed':
+      return 'クローズ済み'
     default:
       return props.session.status
   }
@@ -35,6 +37,8 @@ const statusSeverity = computed(() => {
       return 'info'
     case 'merged':
       return 'success'
+    case 'closed':
+      return 'danger'
     default:
       return 'secondary'
   }

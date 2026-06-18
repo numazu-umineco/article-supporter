@@ -39,8 +39,8 @@ chatRouter.post('/:id/messages', async (c) => {
 
   // Verify ownership and not merged
   const session = await getSession(sessionId, user.id)
-  if (session.status === 'merged') {
-    throw new ValidationError('Cannot send messages to a merged session')
+  if (session.status === 'merged' || session.status === 'closed') {
+    throw new ValidationError('Cannot send messages to a merged or closed session')
   }
 
   const body = await c.req.json()

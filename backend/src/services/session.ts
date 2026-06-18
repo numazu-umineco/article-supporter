@@ -2,17 +2,47 @@ import { eq, and, desc } from 'drizzle-orm'
 import { getDb } from '../db/client'
 import { sessions, eventTypes } from '../db/schema'
 import { NotFoundError, ValidationError } from '../middlewares/error-handler'
+import { getPullRequest } from './git/github-api'
+
+async function syncPrStatus<T extends { id: string; status: string | null; prNumber: number | null }>(
+  session: T
+): Promise<T> {
+  if (session.status !== 'pr_created' || !session.prNumber) {
+    return session
+  }
+
+  try {
+    const pr = await getPullRequest(session.prNumber)
+
+    if (pr.state === 'closed') {
+      const newStatus = pr.merged ? 'merged' : 'closed'
+      const db = getDb()
+      await db
+        .update(sessions)
+        .set({ status: newStatus, updatedAt: new Date() })
+        .where(eq(sessions.id, session.id))
+      return { ...session, status: newStatus }
+    }
+  } catch (e) {
+    // GitHub API エラー時はステータスを変更せずそのまま返す
+    console.error(`Failed to sync PR status for session ${session.id}:`, e)
+  }
+
+  return session
+}
 
 export async function listSessions(userId: string) {
   const db = getDb()
 
-  return db.query.sessions.findMany({
+  const result = await db.query.sessions.findMany({
     where: eq(sessions.userId, userId),
     with: {
       eventType: true,
     },
     orderBy: [desc(sessions.updatedAt)],
   })
+
+  return Promise.all(result.map((s) => syncPrStatus(s)))
 }
 
 export async function getSession(id: string, userId: string) {
@@ -30,7 +60,7 @@ export async function getSession(id: string, userId: string) {
     throw new NotFoundError('Session not found')
   }
 
-  return session
+  return syncPrStatus(session)
 }
 
 export async function createSession(data: {
@@ -78,8 +108,8 @@ export async function updateSession(
   // Check existence and ownership
   const existing = await getSession(id, userId)
 
-  if (existing.status === 'merged') {
-    throw new ValidationError('Cannot edit a merged session')
+  if (existing.status === 'merged' || existing.status === 'closed') {
+    throw new ValidationError('Cannot edit a merged or closed session')
   }
 
   const [updated] = await db
