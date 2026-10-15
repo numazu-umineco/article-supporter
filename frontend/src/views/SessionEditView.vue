@@ -37,7 +37,7 @@ const title = ref<string | null>(null)
 const slug = ref<string | null>(null)
 const articleContent = ref<string | null>(null)
 
-const isMerged = computed(() => session.value?.status === 'merged')
+const isReadOnly = computed(() => session.value?.status === 'merged' || session.value?.status === 'closed')
 const publishing = ref(false)
 const targetSiteBaseUrl = ref<string | undefined>()
 const leftPaneTab = ref<'chat' | 'preview'>('chat')
@@ -269,7 +269,7 @@ async function handlePublish() {
                     :messages="messages"
                     :loading="loadingMessages"
                     :sending="sending"
-                    :disabled="isMerged"
+                    :disabled="isReadOnly"
                     @send="handleSendMessage"
                   />
                 </TabPanel>
@@ -293,7 +293,7 @@ async function handlePublish() {
               v-model:article-content="articleContent"
               :images="images"
               :uploading="uploading"
-              :disabled="isMerged || sending"
+              :disabled="isReadOnly || sending"
               :event-date="session.eventDate"
               @upload-image="handleUploadImage"
               @update-image-filename="handleUpdateImageFilename"
@@ -333,7 +333,7 @@ async function handlePublish() {
               v-model:article-content="articleContent"
               :images="images"
               :uploading="uploading"
-              :disabled="isMerged || sending"
+              :disabled="isReadOnly || sending"
               :event-date="session.eventDate"
               @upload-image="handleUploadImage"
               @update-image-filename="handleUpdateImageFilename"
@@ -372,7 +372,7 @@ async function handlePublish() {
                     :messages="messages"
                     :loading="loadingMessages"
                     :sending="sending"
-                    :disabled="isMerged"
+                    :disabled="isReadOnly"
                     :show-editor-button="showEditorButton"
                     @send="handleSendMessage"
                     @show-editor="closeMobileOverlay"

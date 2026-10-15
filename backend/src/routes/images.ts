@@ -25,8 +25,8 @@ async function verifySessionOwnership(sessionId: string, userId: string) {
   if (!session) {
     throw new NotFoundError('Session not found')
   }
-  if (session.status === 'merged') {
-    throw new ValidationError('Cannot modify images of a merged session')
+  if (session.status === 'merged' || session.status === 'closed') {
+    throw new ValidationError('Cannot modify images of a merged or closed session')
   }
   return session
 }

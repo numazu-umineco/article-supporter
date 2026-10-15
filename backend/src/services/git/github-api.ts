@@ -6,6 +6,7 @@ export interface PullRequestInfo {
   url: string
   number: number
   merged: boolean
+  state: string
 }
 
 export interface BotCommitter {
@@ -63,6 +64,7 @@ export async function createPullRequest(
     url: data.html_url,
     number: data.number,
     merged: false,
+    state: data.state,
   }
 }
 
@@ -79,5 +81,6 @@ export async function getPullRequest(prNumber: number): Promise<PullRequestInfo>
     url: data.html_url,
     number: data.number,
     merged: data.merged,
+    state: data.state,
   }
 }

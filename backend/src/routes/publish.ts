@@ -16,8 +16,8 @@ publishRouter.post('/:id/publish', async (c) => {
   // Get session with images
   const session = await getSession(id, user.id)
 
-  if (session.status === 'merged') {
-    throw new ValidationError('マージ済みのセッションは更新できません')
+  if (session.status === 'merged' || session.status === 'closed') {
+    throw new ValidationError('マージ済みまたはクローズ済みのセッションは更新できません')
   }
 
   const result = await publishSession(session, user)

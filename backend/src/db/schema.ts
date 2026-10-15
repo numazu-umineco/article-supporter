@@ -34,7 +34,7 @@ export const sessions = pgTable('sessions', {
   slug: varchar('slug', { length: 255 }),
   articleContent: text('article_content'),
   eyecatchImageId: uuid('eyecatch_image_id'),
-  status: varchar('status', { length: 50 }).default('draft'), // draft, pr_created, merged
+  status: varchar('status', { length: 50 }).default('draft'), // draft, pr_created, merged, closed
   prUrl: text('pr_url'),
   prNumber: integer('pr_number'),
   branchName: varchar('branch_name', { length: 255 }),

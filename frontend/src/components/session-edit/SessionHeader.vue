@@ -106,7 +106,7 @@ function handlePublishUpdate() {
             @click="handlePublishUpdate"
           />
         </template>
-        <template v-else-if="session.status === 'merged'">
+        <template v-else-if="session.status === 'merged' || session.status === 'closed'">
           <a v-if="session.prUrl" :href="session.prUrl" target="_blank" class="no-underline">
             <Button
               :label="compact ? undefined : `PR #${session.prNumber}`"
@@ -117,8 +117,8 @@ function handlePublishUpdate() {
             />
           </a>
           <Tag
-            value="マージ済み"
-            severity="success"
+            :value="session.status === 'merged' ? 'マージ済み' : 'クローズ済み'"
+            :severity="session.status === 'merged' ? 'success' : 'danger'"
           />
         </template>
       </div>
