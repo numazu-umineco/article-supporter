@@ -20,7 +20,7 @@ COPY frontend/tsconfig.json frontend/tsconfig.node.json ./frontend/
 RUN npm run build -w frontend
 
 # ---- Production Stage ----
-FROM nginx
+FROM nginx:1.30.6
 
 # Copy nginx template
 COPY frontend/nginx/default.conf.template /etc/nginx/templates/default.conf.template
